@@ -56,8 +56,8 @@ const { title = 'Demski Group', description = '', pageClass = '' } = Astro.props
       .nav-dropdown-menu a:last-child { border-bottom: 0; }
       .nav-dropdown-menu a:hover,
       .nav-dropdown-menu a.active { color: #0154b1; }
-      .btn-cta { background: #f09300 !important; color: white !important; border: 1px solid #f09300; padding: 10px 20px !important; border-radius: 6px; font-size: 18px !important; font-weight: 500 !important; white-space: nowrap; transition: background 0.4s ease; }
-      .btn-cta:hover { background: #ffffff !important; border: 1px solid #222; color: #222 !important; }
+      .btn-cta { background: #f09300 !important; color: white !important; border: 1.1px solid #f09300; padding: 10px 20px !important; border-radius: 6px; font-size: 18px !important; font-weight: 500 !important; white-space: nowrap; transition: background 0.4s ease; }
+      .btn-cta:hover { background: #ffffff !important; border: 1.1px solid #222; color: #222 !important; }
 
       /* ─── FOCUS STATES (accessibility) ─── */
       :focus-visible { outline: 2px solid #0154b1; outline-offset: 3px; border-radius: 3px; }
@@ -138,8 +138,8 @@ const { title = 'Demski Group', description = '', pageClass = '' } = Astro.props
       .footer-contact { background: #ebebeb !important; padding: 50px 40px; }
       .footer-contact h4 { font-size: 35px; font-weight: 600; margin-bottom: 16px; color: #0A0000; }
       .footer-contact p { font-size: 18px; color: #000000; line-height: 1.5; margin-bottom: 20px; }
-      .footer-cta-btn { display: inline-block; background: #f09300; color: white !important; padding: 12px 22px; border-radius: 12px; font-weight: 500; font-size: 20px !important; margin-bottom: 18px; text-decoration: none !important; width: fit-content !important; transition: all 0.3s ease; border: 1.5px solid #f09300; }
-      .footer-cta-btn:hover { background: #ffffff !important; color: #282828 !important; border: 1.5px solid #282828; }
+      .footer-cta-btn { display: inline-block; background: #f09300; color: white !important; padding: 12px 22px; border-radius: 12px; font-weight: 500; font-size: 20px !important; margin-bottom: 18px; text-decoration: none !important; width: fit-content !important; transition: all 0.3s ease; border: 1.65px solid #f09300; }
+      .footer-cta-btn:hover { background: #ffffff !important; color: #282828 !important; border: 1.65px solid #282828; }
       .scroll-cta-btn:hover { background: #ffffff !important; color: #282828 !important; border-color: #282828 !important; }
       .footer-bottom { border-top: 1px solid #ddd; padding: 16px 80px; font-size: 18px; color: #888; text-align: center; background: #ffffff; }
       .social-row { display: flex; gap: 8px; margin-top: 10px; }
@@ -181,6 +181,46 @@ const { title = 'Demski Group', description = '', pageClass = '' } = Astro.props
 
       @media (max-width: 480px) {
         .btn-cta { display: none; }
+      }
+    </style>
+    <style is:global>
+      /* ─── ARROW ICON (global utility) ─── */
+      .btn-arrow {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        position: relative;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+      }
+      .btn-arrow-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        flex-shrink: 0;
+        transition: transform 0.3s ease;
+        vertical-align: middle;
+      }
+      .btn-arrow-icon::before {
+        content: "→";
+        font-size: 42px;
+        font-weight: 300;
+        line-height: 1;
+        display: block;
+        transform: translateY(-3px);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+        font-family: 'Outfit', sans-serif;
+      }
+      .btn-arrow:hover .btn-arrow-icon,
+      a:hover .btn-arrow-icon,
+      button:hover .btn-arrow-icon {
+        transform: translateX(5px);
       }
     </style>
     <!-- Page-level styles injected here -->
@@ -344,7 +384,7 @@ const { title = 'Demski Group', description = '', pageClass = '' } = Astro.props
 
     <!-- Scroll-triggered sticky bar (desktop only, appears after 5% scroll) -->
     <div id="scrollStickyBar" style="
-      position: fixed; top: 0; left: 0; right: 0; z-index: 9998;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
       transform: translateY(-100%); transition: transform 0.35s ease;
     ">
       <!-- Top bar -->
@@ -359,7 +399,7 @@ const { title = 'Demski Group', description = '', pageClass = '' } = Astro.props
       ">
         <a href="/"><img src="/Logo3-768x137.webp" alt="Demski Group" style="height:42px;width:auto;" /></a>
         <a href="/contact-us/" class="scroll-cta-btn" style="
-          background:#f09300;color:#fff;border:1px solid #f09300;
+          background:#f09300;color:#fff;border:1.1px solid #f09300;
           padding:10px 20px;border-radius:6px;font-size:16px;font-weight:600;
           text-decoration:none;white-space:nowrap;transition:all 0.3s ease;
           font-family:'Outfit',sans-serif;
@@ -371,19 +411,23 @@ const { title = 'Demski Group', description = '', pageClass = '' } = Astro.props
       (function(){
         var bar = document.getElementById('scrollStickyBar');
         if (!bar) return;
+        // Hide on mobile
+        if (window.innerWidth <= 768) { bar.style.display = 'none'; return; }
+        var header = document.querySelector('.site-header-wrap');
         var shown = false;
+        var threshold = Math.max(80, (document.body.scrollHeight - window.innerHeight) * 0.04);
         window.addEventListener('scroll', function(){
-          var pct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-          if (!shown && pct >= 0.05) {
+          var sy = window.scrollY;
+          if (!shown && sy >= threshold) {
             bar.style.transform = 'translateY(0)';
+            if (header) header.style.display = 'none';
             shown = true;
-          } else if (shown && pct < 0.05) {
+          } else if (shown && sy < threshold) {
             bar.style.transform = 'translateY(-100%)';
+            if (header) header.style.display = '';
             shown = false;
           }
         }, { passive: true });
-        // Hide on mobile
-        if (window.innerWidth <= 768) bar.style.display = 'none';
       })();
     </script>
 
