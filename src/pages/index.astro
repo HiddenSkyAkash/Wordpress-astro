@@ -191,7 +191,7 @@ html, body { overflow-x: hidden; }
   display: inline-flex;
   align-items: center;
   gap: 20px;
-  border: 1.5px solid #1b1c1d;
+  border: 1.65px solid #1b1c1d;
   color: #1b1c1d;
   font-family: 'Outfit', sans-serif;
   font-size: 18px;
@@ -336,7 +336,7 @@ html, body { overflow-x: hidden; }
   display: inline-flex;
   align-items: center;
   gap: 16px;
-  border: 1.5px solid #282828;
+  border: 1.65px solid #282828;
   color: #282828;
   font-family: 'Outfit', sans-serif;
   font-size: 18px;
@@ -348,12 +348,9 @@ html, body { overflow-x: hidden; }
   white-space: nowrap;
 }
 .btn-outline-dark:hover { background: transparent; color: #0154b1; border-color: #0154b1; transform: translateY(-4px); box-shadow: 0 8px 20px rgba(1,84,177,0.15); }
-.btn-outline-dark .dark-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  line-height: 1;
+.btn-outline-dark .btn-arrow-icon::before,
+.btn-outline-clients .btn-arrow-icon::before {
+  font-size: 54px;
 }
 
 /* ─── SECTION 7: CLIENTS ─── */
@@ -412,7 +409,7 @@ html, body { overflow-x: hidden; }
   display: inline-flex;
   align-items: center;
   gap: 24px;
-  border: 1.5px solid #000000;
+  border: 1.65px solid #000000;
   color: #000000;
   font-family: 'Outfit', sans-serif;
   font-size: 16px;
@@ -447,7 +444,6 @@ html, body { overflow-x: hidden; }
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  scroll-behavior: smooth;
   align-items: flex-start;
 }
 .testimonial-slider::-webkit-scrollbar { display: none; }
@@ -500,7 +496,7 @@ html, body { overflow-x: hidden; }
 }
 .tcard-body {
   font-size: 14px;
-  color: #282828;
+  color: #0A0000;
   line-height: 1.7;
   flex: 1;
   margin-bottom: 18px;
@@ -598,7 +594,7 @@ html, body { overflow-x: hidden; }
 }
 .excellence-left h2 {
   font-family: 'Outfit', sans-serif;
-  font-size: 52px;
+  font-size: 47px;
   font-weight: 700;
   color: #FFFFFF;
   line-height: 1.18;
@@ -616,7 +612,7 @@ html, body { overflow-x: hidden; }
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  border: 1.5px solid #4798ed;
+  border: 1.65px solid #4798ed;
   color: #4798ed;
   background: transparent;
   font-family: 'Outfit', sans-serif;
@@ -968,10 +964,6 @@ html, body { overflow-x: hidden; }
 /* ─── SHARED: BLOG + RESULTS ─── */
 .blog-section { background: #ffffff; padding: 80px 30px; }
 .blog-section .section-header h2 { color: #3A3A3A; }
-.blog-section .post-card { filter: none; }
-.blog-section .post-card:hover { filter: none; }
-.results-section .post-card { filter: none; }
-.results-section .post-card:hover { filter: none; }
 /* .results-section base rule is defined in SECTION 12+13 block below */
 .results-section .section-header h2 { color: #3A3A3A; }
 .results-section .section-header p { color: #0A0000 !important; }
@@ -999,7 +991,7 @@ html, body { overflow-x: hidden; }
   display: inline-flex;
   align-items: center;
   gap: 20px;
-  border: 1.5px solid #1a1a1a;
+  border: 1.65px solid #1a1a1a;
   color: #0A0000;
   font-size: 18px;
   font-weight: 600;
@@ -1036,7 +1028,6 @@ html, body { overflow-x: hidden; }
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  scroll-behavior: smooth;
   padding: 8px 4px 16px;
 }
 .cards-slider::-webkit-scrollbar { display: none; }
@@ -1060,7 +1051,6 @@ html, body { overflow-x: hidden; }
 .post-card:hover {
   filter: brightness(1.05) grayscale(0%);
   box-shadow: 0 15px 40px rgba(0,0,0,0.35);
-  transform: translateY(-3px);
   z-index: 2;
 }
 .post-card img {
@@ -1572,6 +1562,68 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
   .excellence-section { margin-top: -80px; }
 }
 
+/* ─── DESKTOP ONLY FIXES: CARD SHADOWS & SEE ALL ARROW ─── */
+@media (min-width: 901px) {
+  /* Increase padding inside the slider and compensate with negative margin to prevent shadow clipping on top and bottom */
+  .cards-slider {
+    padding: 30px 0 45px 0;
+    margin: -30px 0 -45px 0;
+  }
+
+  /* Make shadows soft, premium, natural and floating */
+  .post-card {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08), 0 5px 15px rgba(0, 0, 0, 0.03);
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease;
+  }
+
+  /* Hover state: static position and softer wider shadow */
+  .post-card:hover {
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12), 0 10px 25px rgba(0, 0, 0, 0.05);
+    z-index: 2;
+  }
+
+  /* Increase "See all" arrow size to fill out the button better while keeping it centered */
+  .btn-see-all .arrow-circle {
+    font-size: 26px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 2px;
+    transition: transform 0.25s ease;
+  }
+
+  .btn-see-all:hover .arrow-circle {
+    transform: translateX(4px);
+  }
+
+  /* ── TESTIMONIAL CARDS: premium floating shadows, no shadow clipping ── */
+  /* Negative margin expands the clip area by 36px on all sides so shadows
+     breathe freely; equal padding pushes content back to its original position */
+  .tslider-clip {
+    overflow: hidden;
+    margin: -36px 24px;
+    padding: 36px 36px;
+  }
+
+  .testimonial-card-new {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 1px 4px  rgba(0, 0, 0, 0.03),
+      0 6px 20px rgba(0, 0, 0, 0.07),
+      0 18px 52px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.35s ease, transform 0.35s ease;
+  }
+
+  .testimonial-card-new:hover {
+    box-shadow:
+      0 2px 8px  rgba(0, 0, 0, 0.05),
+      0 14px 38px rgba(0, 0, 0, 0.11),
+      0 30px 72px rgba(0, 0, 0, 0.07);
+    transform: translateY(-6px);
+  }
+}
+
 /* ─── REDUCED MOTION: disable/slow heavy animations for accessibility ─── */
 @media (prefers-reduced-motion: reduce) {
   .marquee-track { animation: none; }
@@ -1634,7 +1686,7 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
   <div class="services-inner">
     <div class="services-header" data-aos="fade-up">
       <h2>Code the Future:<br class="mob-br" /> Innovative Solutions,<br />Tailored for You</h2>
-      <a href="/services/" class="btn-outline svc-btn-desktop">See all services <span class="btn-arrow-circle"><i class="fa-solid fa-arrow-right"></i></span></a>
+      <a href="/services/" class="btn-outline svc-btn-desktop">See all services <span class="btn-arrow-icon"></span></a>
     </div>
     <div class="services-grid">
       <div class="service-card" data-aos="fade-up" data-aos-delay="0">
@@ -1668,7 +1720,7 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
         <p><br/>Integrate smart devices and advanced technologies to create connected solutions that transform your business operations with our IoT development services.</p>
       </div>
     </div>
-    <a href="/services/" class="btn-outline svc-btn-mobile">See all services <span class="btn-arrow-circle"><i class="fa-solid fa-arrow-right"></i></span></a>
+    <a href="/services/" class="btn-outline svc-btn-mobile">See all services <span class="btn-arrow-icon"></span></a>
   </div>
 </section>
 
@@ -1695,7 +1747,7 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
     </div>
   </div>
   <div class="tech-see-all">
-    <a href="https://demskigroup.com/technologies/" class="btn-outline-dark">See all capabilities <span class="dark-arrow">→</span></a>
+    <a href="https://demskigroup.com/technologies/" class="btn-outline-dark">See all capabilities <span class="btn-arrow-icon"></span></a>
   </div>
 
 </section>
@@ -1715,7 +1767,7 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
       <h2>See the Businesses<br class="mob-br" /> That Rely<br class="desk-br" /> on Our<br class="mob-br" /> Services</h2>
       <p>Over 12 years and hundreds of projects later, we have a lot to talk about.</p>
       <a href="https://demskigroup.com/our-clients/" class="btn-outline-clients">
-        See our clients <span class="arrow-circle">→</span>
+        See our clients <span class="btn-arrow-icon"></span>
       </a>
     </div>
   </div>
@@ -2066,20 +2118,15 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
       slider.scrollLeft = cardWidth() * cards.length;
     };
 
-    // No animation on init
-    slider.style.scrollBehavior = 'auto';
+    // No animation on init (completely static initialization)
     jumpToReal();
-    setTimeout(() => { slider.style.scrollBehavior = 'smooth'; }, 50);
 
     function next() {
       slider.scrollBy({ left: cardWidth(), behavior: 'smooth' });
       setTimeout(() => {
-        const max = slider.scrollWidth - slider.clientWidth;
         // If we've scrolled into the appended clones zone, silently jump back
         if (slider.scrollLeft >= cardWidth() * cards.length * 2) {
-          slider.style.scrollBehavior = 'auto';
           slider.scrollLeft = cardWidth() * cards.length;
-          setTimeout(() => { slider.style.scrollBehavior = 'smooth'; }, 50);
         }
       }, 400);
     }
@@ -2089,9 +2136,7 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
       setTimeout(() => {
         // If we've scrolled into the prepended clones zone, silently jump forward
         if (slider.scrollLeft <= cardWidth() * (cards.length - 1)) {
-          slider.style.scrollBehavior = 'auto';
           slider.scrollLeft = cardWidth() * cards.length * 2 - cardWidth();
-          setTimeout(() => { slider.style.scrollBehavior = 'smooth'; }, 50);
         }
       }, 400);
     }
@@ -2099,10 +2144,8 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
     btnNext && btnNext.addEventListener('click', next);
     btnPrev && btnPrev.addEventListener('click', prev);
 
-    // Optional: auto-play every 4s
-    let autoplay = setInterval(next, 4000);
-    slider.addEventListener('mouseenter', () => clearInterval(autoplay));
-    slider.addEventListener('mouseleave', () => { autoplay = setInterval(next, 4000); });
+    // Optional: auto-play disabled to keep the slider static on page load.
+    // Movement only triggers on interaction (arrows click or manual touch/drag/swipe).
   })();
   </script>
 
@@ -2114,7 +2157,7 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
         <h2>Excellence | Our<br/>Minimum Standard</h2>
         <p>We pride ourselves on our unwavering commitment to customer satisfaction.</p>
         <a href="/our-clients" class="btn-outline-excellence">
-          See our success <i class="fa-solid fa-arrow-right" style="font-size:12px"></i>
+          See our success <span class="btn-arrow-icon"></span>
         </a>
       </div>
 
@@ -2403,10 +2446,8 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
       return slider.querySelector('.post-card').offsetWidth + gap;
     }
 
-    // Jump silently to the real cards (skip the prepended clones)
-    slider.style.scrollBehavior = 'auto';
+    // Jump silently to the real cards (skip the prepended clones - completely static on load)
     slider.scrollLeft = cardWidth() * cards.length;
-    setTimeout(() => { slider.style.scrollBehavior = 'smooth'; }, 50);
 
     let busy = false;
 
@@ -2417,9 +2458,7 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
       setTimeout(() => {
         // If deep into appended clones, silently jump back to real start
         if (slider.scrollLeft >= cardWidth() * cards.length * 2) {
-          slider.style.scrollBehavior = 'auto';
           slider.scrollLeft = cardWidth() * cards.length;
-          setTimeout(() => { slider.style.scrollBehavior = 'smooth'; }, 50);
         }
         busy = false;
       }, 450);
@@ -2432,9 +2471,7 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
       setTimeout(() => {
         // If deep into prepended clones, silently jump forward to real end
         if (slider.scrollLeft <= cardWidth() * (cards.length - 1)) {
-          slider.style.scrollBehavior = 'auto';
           slider.scrollLeft = cardWidth() * cards.length * 2 - cardWidth();
-          setTimeout(() => { slider.style.scrollBehavior = 'smooth'; }, 50);
         }
         busy = false;
       }, 450);
