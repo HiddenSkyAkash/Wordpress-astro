@@ -997,7 +997,7 @@ h1, h2, h3, h4, h5, h6 {
   .svc-contact-inner { grid-template-columns: 1fr; }
   .svc-tech-header { flex-direction: column; align-items: flex-start; gap: 20px; }
   .svc-projects-header { flex-direction: column; gap: 16px; }
-  .proj-top-wrap { grid-template-columns: 1fr; }
+  .proj-top-wrap { grid-template-columns: minmax(0, 1fr); }
   .biopac-card { grid-row: span 1; }
   .svc-methods-header { flex-direction: column; gap: 16px; align-items: flex-start; }
   .svc-methods-grid { grid-template-columns: 1fr; }
@@ -1005,13 +1005,23 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 600px) {
   .svc-hero, .svc-brands, .svc-services, .svc-tech, .svc-projects,
   .svc-excellence, .svc-pos, .svc-methods, .svc-contact { padding-left: 24px; padding-right: 24px; }
+  .excellence-section { padding: 60px 24px 80px; }
+  .excellence-card { padding: 32px 16px; grid-template-columns: minmax(0, 1fr); }
+  .excellence-left { min-width: 0; }
+  .excellence-right { transform: none; min-width: 0; }
+  .badge-rotator { width: 200px; height: 200px; margin: 0 auto; }
+  .badge-slide img { width: 100%; height: auto; }
   .svc-hero h1 { font-size: 36px; }
+  .svc-tech-left h2 { font-size: 32px; }
+  .svc-tech-left h2 span { white-space: normal; }
   .svc-grid { grid-template-columns: 1fr; }
   .svc-card.wide { grid-column: span 1; flex-direction: column; }
-  .proj-main-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-  .proj-four { grid-template-columns: 1fr 1fr; }
+  .svc-projects-inner { padding: 24px 16px; }
+  .proj-main-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .proj-four { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .contact-form .form-row { grid-template-columns: 1fr; }
-  .excellence-ratings { flex-direction: column; gap: 20px; }
+  .excellence-bottom { flex-direction: column; gap: 20px; align-items: center; }
+  .rating-col { padding: 0 20px; }
 }
 </style>
 
@@ -1152,7 +1162,7 @@ h1, h2, h3, h4, h5, h6 {
 <section class="svc-tech">
   <div class="svc-tech-inner">
     <div class="svc-tech-left">
-      <h2>Versatile Tech Stack:<br/><span style="white-space: nowrap;">Tailored Solutions for Every</span><br/>Business Need</h2>
+      <h2>Versatile Tech Stack:<br/><span>Tailored Solutions for Every</span><br/>Business Need</h2>
       <a href="/technologies/" class="btn-outline">See all technologies <span class="btn-arrow-icon"></span></a>
     </div>
     <div class="tech-logo-grid">
