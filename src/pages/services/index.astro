@@ -1,5 +1,63 @@
 ﻿---
 import Layout from '../../layouts/Layout.astro';
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=3600');
+
+const KNOWN_IMAGES: Record<string,string> = {
+  'biopac':'https://demskigroup.com/wp-content/uploads/2024/07/Biopac.png',
+  'shop-orthopedics':'https://demskigroup.com/wp-content/uploads/2024/06/ShopOrthopedics-1.png',
+  'property-gauge':'https://demskigroup.com/wp-content/uploads/2024/07/PropertyGauge.png',
+  'mister-quik':'https://demskigroup.com/wp-content/uploads/2024/07/mrquick.png',
+  'pnc-bank':'https://demskigroup.com/wp-content/uploads/2024/06/company-logo-4.png',
+  'jackson-hewitt':'https://demskigroup.com/wp-content/uploads/2024/06/jacksonhewitt-1.png',
+  'zoomifi':'https://demskigroup.com/wp-content/uploads/2024/06/Zoomifi-1.png',
+  'corning-glass':'https://demskigroup.com/wp-content/uploads/2024/07/corning-300x201-1.png',
+  'flower-moxie-case-study':'https://demskigroup.com/wp-content/uploads/2024/07/Flowermoxie.png',
+  'golf-daddy':'https://demskigroup.com/wp-content/uploads/2024/07/Branded-300x159.png',
+  'audiojack':'https://demskigroup.com/wp-content/uploads/2024/06/audiojackhighres-300x159.png',
+  'willo':'https://demskigroup.com/wp-content/uploads/2024/07/Willo-1.png',
+  'impact-team-tennis':'https://demskigroup.com/wp-content/uploads/2025/02/ITTLogo-300x159.png',
+  'bite':'https://demskigroup.com/wp-content/uploads/2024/08/newbitelogo.png',
+  'hewlett-packard-enterprise':'https://demskigroup.com/wp-content/uploads/2024/07/HP-1.png',
+  'farmers-daughter-fibers':'https://demskigroup.com/wp-content/uploads/2024/07/FarmersDaughter.png',
+  'tausi-brands':'https://demskigroup.com/wp-content/uploads/2024/06/Tausi-1.png',
+  'nu-borders':'https://demskigroup.com/wp-content/uploads/2024/07/Nuborders.png',
+};
+
+function clean(s: string) {
+  return (s||'').replace(/&amp;/g,'&').replace(/&#8217;/g,"'").replace(/&#8216;/g,"'").replace(/<[^>]*>/g,'').trim();
+}
+function normalizeLink(link: string, slug: string) {
+  return (link||'').replace('https://demskigrdev.wpenginepowered.com','').replace('https://demskigroup.com','') || `/our-clients/${slug}/`;
+}
+function extractPhoto(item: any) {
+  return item._embedded?.['wp:featuredmedia']?.[0]?.source_url || item.acf?.featured_image?.url || item.acf?.image?.url || '';
+}
+
+let svcClients: any[] = [];
+try {
+  let all: any[] = [], page = 1, totalPages = 1;
+  do {
+    const res = await fetch(`https://demskigroup.com/wp-json/wp/v2/our-clients?_embed&per_page=100&page=${page}`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) break;
+    const tp = res.headers.get('X-WP-TotalPages');
+    if (tp) totalPages = parseInt(tp);
+    const data = await res.json();
+    if (!Array.isArray(data) || !data.length) break;
+    all = [...all, ...data]; page++;
+  } while (page <= totalPages);
+  svcClients = all.map((item: any) => ({
+    id: item.id, name: clean(item.title?.rendered), slug: item.slug||'',
+    link: normalizeLink(item.link, item.slug),
+    photo: extractPhoto(item) || KNOWN_IMAGES[item.slug] || '',
+    desc: clean(item.excerpt?.rendered||'').replace(/\[&hellip;\]/g,''),
+  }));
+} catch(e) { console.warn('services SSR clients fetch failed:', e); }
+
+const svcBiopac = svcClients.find(c => c.slug?.includes('biopac')) || svcClients[0];
+const svcOthers = svcClients.filter(c => c.id !== svcBiopac?.id);
+const svcTopFour = svcOthers.slice(0, 4);
+const svcRest = svcOthers.slice(4, 12);
+const svcBiopacDesc = svcBiopac?.desc?.length > 20 ? svcBiopac.desc : 'The Demski Group successfully delivered a scalable and efficient web application for Biopac, enabling users to perform and track scientific studies online.';
 ---
 
 <Layout title="Software Services - The Demski Group">
@@ -893,6 +951,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: clamp(28px, 3.2vw, 46px);
   margin-bottom: 46px;
   line-height: 1.2;
+  white-space: nowrap;
   font-weight: 600;
 }
 .contact-form {
@@ -910,7 +969,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   padding: 12px 0;
   border: none;
-  border-bottom: 1px solid rgba(255,255,255,0.5);
+  border-bottom: 1.5px solid rgba(255,255,255,0.9);
   border-radius: 0;
   font-size: 15px;
   font-family: inherit;
@@ -1317,7 +1376,7 @@ h1, h2, h3, h4, h5, h6 {
   </div>
 </section>
 
-<!-- ══ PROJECTS (client-side fetch from WP) ══ -->
+<!-- ══ PROJECTS (SSR from WP) ══ -->
 <section class="svc-projects">
   <div class="svc-projects-inner">
     <div class="svc-projects-header">
@@ -1325,20 +1384,37 @@ h1, h2, h3, h4, h5, h6 {
       <a href="/our-clients/" class="btn-outline-sm">See all clients <span class="btn-arrow-icon"></span></a>
     </div>
 
-    <!-- BIOPAC + 4 -->
-    <div class="proj-top-wrap" id="svc-biopac-section">
-      <div class="skeleton biopac-card" style="grid-row:span 2; min-height:300px;"></div>
-      <div class="proj-four">
-        <div class="skeleton" style="min-height:140px; border-radius:14px;"></div>
-        <div class="skeleton" style="min-height:140px; border-radius:14px;"></div>
-        <div class="skeleton" style="min-height:140px; border-radius:14px;"></div>
-        <div class="skeleton" style="min-height:140px; border-radius:14px;"></div>
+    {svcBiopac && (
+      <div class="proj-top-wrap">
+        <a class="biopac-card" href={svcBiopac.link} style="grid-row:span 2">
+          {svcBiopac.photo
+            ? <div class="biopac-logo"><img src={svcBiopac.photo} alt={svcBiopac.name} /></div>
+            : <span class="biopac-name">{svcBiopac.name}</span>}
+          <p class="biopac-desc">{svcBiopacDesc}</p>
+          <span class="biopac-link">Read full case study <span class="svc-arrow"></span></span>
+        </a>
+        <div class="proj-four">
+          {svcTopFour.map((c: any) => (
+            <a class="client-card" href={c.link}>
+              <div class="client-card-img">
+                {c.photo ? <img src={c.photo} alt={c.name} loading="lazy" /> : <span class="client-card-name">{c.name}</span>}
+              </div>
+              <span class="client-card-link">Read full case study <span class="svc-arrow"></span></span>
+            </a>
+          ))}
+        </div>
       </div>
-    </div>
+    )}
 
-    <!-- All remaining -->
-    <div class="proj-main-grid" id="svc-clients-grid">
-      {Array(8).fill(0).map(() => <div class="skeleton" style="min-height:140px; border-radius:14px;"></div>)}
+    <div class="proj-main-grid">
+      {svcRest.map((c: any) => (
+        <a class="client-card" href={c.link}>
+          <div class="client-card-img">
+            {c.photo ? <img src={c.photo} alt={c.name} loading="lazy" /> : <span class="client-card-name">{c.name}</span>}
+          </div>
+          <span class="client-card-link">Read full case study <span class="svc-arrow"></span></span>
+        </a>
+      ))}
     </div>
   </div>
 </section>
@@ -1586,96 +1662,8 @@ h1, h2, h3, h4, h5, h6 {
   }
 </script>
 
-<!-- ══ CLIENT-SIDE WP FETCH (same approach as our-clients page) ══ -->
+
 <script is:inline>
-(async function() {
-  const WP_URLS = [
-    'https://demskigroup.com/wp-json/wp/v2/our-clients',
-    'https://demskigrdev.wpenginepowered.com/wp-json/wp/v2/our-clients',
-  ];
-
-  function clean(s) {
-    return (s||'').replace(/&amp;/g,'&').replace(/&#8217;/g,"'")
-      .replace(/&#8216;/g,"'").replace(/<[^>]*>/g,'').trim();
-  }
-  function normalizeLink(link, slug) {
-    return (link||'').replace('https://demskigrdev.wpenginepowered.com','')
-      .replace('https://demskigroup.com','') || `/our-clients/${slug}/`;
-  }
-
-  async function fetchClients() {
-    for (const base of WP_URLS) {
-      try {
-        let all = [], page = 1, tp = 1;
-        do {
-          const res = await fetch(`${base}?_embed&per_page=100&page=${page}`, { signal: AbortSignal.timeout(8000) });
-          if (!res.ok) break;
-          const h = res.headers.get('X-WP-TotalPages');
-          if (h) tp = parseInt(h);
-          const d = await res.json();
-          if (!Array.isArray(d) || !d.length) break;
-          all = [...all, ...d]; page++;
-        } while (page <= tp);
-        if (all.length) return all.map(item => ({
-          id: item.id, name: clean(item.title?.rendered),
-          slug: item.slug||'',
-          link: normalizeLink(item.link, item.slug),
-          logo: item._embedded?.['wp:featuredmedia']?.[0]?.source_url || '',
-          desc: clean(item.excerpt?.rendered).replace(/\[&hellip;\]/g,''),
-        }));
-      } catch(_){ continue; }
-    }
-    return [];
-  }
-
-  function clientCard(c) {
-    const img = c.logo
-      ? `<img src="${c.logo}" alt="${c.name}" loading="lazy" />`
-      : `<span class="client-card-name">${c.name}</span>`;
-    return `<a class="client-card" href="${c.link}">
-      <div class="client-card-img">${img}</div>
-      <span class="client-card-link">Read full case study <span class="svc-arrow"></span></span>
-    </a>`;
-  }
-
-  const clients = await fetchClients();
-  if (!clients.length) {
-    // API unavailable — clear skeleton placeholders so users don't see endless loaders
-    const bSec = document.getElementById('svc-biopac-section');
-    const gSec = document.getElementById('svc-clients-grid');
-    if (bSec) bSec.style.display = 'none';
-    if (gSec) gSec.style.display = 'none';
-    return;
-  }
-
-  const biopac = clients.find(c => c.slug?.includes('biopac')) || clients[0];
-  const others = clients.filter(c => c.id !== biopac?.id);
-  const topFour = others.slice(0, 4);
-  const rest = others.slice(4);
-
-  const biopacDesc = (biopac?.desc?.length||0) > 20 ? biopac.desc
-    : 'The Demski Group successfully delivered a scalable and efficient web application for Biopac, enabling users to perform and track scientific studies online.';
-
-  const biopacLogoHtml = biopac?.logo
-    ? `<div class="biopac-logo"><img src="${biopac.logo}" alt="${biopac.name}" /></div>`
-    : `<span class="biopac-name">${biopac?.name||''}</span>`;
-
-  const biopacSection = document.getElementById('svc-biopac-section');
-  if (biopacSection) {
-    biopacSection.innerHTML = `
-      <a class="biopac-card" href="${biopac.link}" style="grid-row:span 2">
-        ${biopacLogoHtml}
-        <p class="biopac-desc">${biopacDesc}</p>
-        <span class="biopac-link">Read full case study <span class="svc-arrow"></span></span>
-      </a>
-      <div class="proj-four">${topFour.map(c => clientCard(c)).join('')}</div>
-    `;
-  }
-
-  const grid = document.getElementById('svc-clients-grid');
-  if (grid) grid.innerHTML = rest.slice(0, 8).map(c => clientCard(c)).join('');
-})();
-
 /* Testimonial carousel */
 (function () {
   var slides = Array.from(document.querySelectorAll('#svcTcCarousel [data-tc-slide]'));
