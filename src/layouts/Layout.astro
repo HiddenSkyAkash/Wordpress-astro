@@ -1096,7 +1096,7 @@ const { title = 'Demski Group', description = '', pageClass = '' } = Astro.props
         launcher.style.display = "flex";
         setTimeout(() => {
           launcher.classList.add("launcher-visible");
-          setTimeout(() => { if (!expanded) showGreetingBubble(); }, 1000);
+          // setTimeout(() => { if (!expanded) showGreetingBubble(); }, 1000);
         }, 3000);
       };
       if (avatar.complete) reveal();
