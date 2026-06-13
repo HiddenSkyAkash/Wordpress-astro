@@ -606,6 +606,8 @@ html, body { overflow-x: hidden; }
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  align-items: center;
+  text-align: center;
   gap: 22px;
   padding-right: 60px;
   padding-left: 2%;
@@ -731,7 +733,7 @@ html, body { overflow-x: hidden; }
 .rating-col-stars { color: #F09300; font-size: 38px; letter-spacing: 6px; }
 
 @media (max-width: 900px) {
-  .excellence-card { grid-template-columns: 1fr; padding: 50px 24px; gap: 40px; }
+  .excellence-card { grid-template-columns: minmax(0, 1fr); padding: 50px 24px; gap: 40px; }
   .excellence-left { border-right: none; border-bottom: 1px solid #333; padding-right: 0; padding-bottom: 40px; }
   .excellence-right { padding-left: 0; }
   .excellence-left h2 { font-size: 32px; }
@@ -1483,15 +1485,18 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
 
   /* Excellence */
   .excellence-section { padding: 60px 0 0; }
-  .excellence-card { margin: 0; padding: 40px 20px 40px; grid-template-columns: 1fr; gap: 32px; border-radius: 0; }
-  .excellence-left { border-right: none; border-bottom: 1px solid #333; padding-right: 0; padding-bottom: 32px; align-items: center; text-align: center; }
-  .excellence-left p { max-width: 100%; text-align: center; }
+  .excellence-card { margin: 0; padding: 32px 20px 40px; grid-template-columns: minmax(0, 1fr); gap: 32px; border-radius: 0; }
+  .excellence-left { border-right: none; border-bottom: 1px solid #333; padding-right: 0; padding-left: 0; padding-top: 0; padding-bottom: 32px; align-items: center; text-align: center; width: 100%; max-width: 100%; }
+  .excellence-left p { max-width: 100%; width: 100%; text-align: center; font-size: 16px; }
   .excellence-left h2 { font-size: 28px; text-align: center; }
+  .excellence-h2-break { display: none; }
   .excellence-right { padding-left: 0; align-items: center; justify-content: center; }
   .badge-rotator { width: 312px; height: 312px; max-width: 312px; }
   .badge-slide img { max-width: 264px; max-height: 264px; }
   .excellence-bottom { flex-direction: column; gap: 24px; padding-top: 24px; }
   .rating-col { padding: 0 20px; }
+  .rating-col-label { font-size: 32px; }
+  .rating-col-stars { font-size: 48px; }
   .rating-col-label { font-size: 24px; margin-bottom: 10px; }
   .rating-col-stars { font-size: 28px; }
 
@@ -2253,7 +2258,7 @@ footer { background: #ffffff; color: #282828; padding: 0; margin-top: 0 !importa
   <div class="excellence-card">
 
       <div class="excellence-left">
-        <h2>Excellence | Our<br/>Minimum Standard</h2>
+        <h2>Excellence | Our<br class="excellence-h2-break"/> Minimum Standard</h2>
         <p>We pride ourselves on our unwavering commitment to customer satisfaction.</p>
         <a href="/our-clients" class="btn-outline-excellence">
           See our success <span class="btn-arrow-icon"></span>
