@@ -9,6 +9,7 @@ try {
   if (res.ok) {
     const posts = await res.json();
     if (Array.isArray(posts)) post = posts[0] ?? null;
+    if (post && (!post.title?.rendered || !post.content?.rendered)) post = null;
   }
 } catch (e) { post = null; }
 

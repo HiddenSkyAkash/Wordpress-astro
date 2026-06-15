@@ -13,6 +13,7 @@ if (!post) {
     if (r2.ok) { const d = await r2.json(); if (Array.isArray(d) && d.length > 0) post = d[0]; }
   } catch(e) {}
 }
+if (post && (!post.title?.rendered || !post.content?.rendered)) post = null;
 
 const date = post ? new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
 const featuredImg = post?._embedded?.['wp:featuredmedia']?.[0]?.source_url;
