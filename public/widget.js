@@ -190,11 +190,11 @@
     + '.cb-input-bar button{width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;border-radius:50%!important;background:linear-gradient(135deg,#0154B1,#1a7fe8)!important;color:#fff!important;border:none!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;flex-shrink:0!important;transition:all .2s;box-shadow:0 3px 10px rgba(1,84,177,.32)!important;opacity:1!important;visibility:visible!important;overflow:visible!important;padding:0!important;}'
     + '.cb-input-bar button:hover{transform:scale(1.08);}'
     + '.cb-input-bar button:active{transform:scale(.95);}'
-    + '#cb-send svg{display:block!important;width:16px!important;height:16px!important;min-width:16px!important;min-height:16px!important;max-width:none!important;max-height:none!important;flex-shrink:0!important;opacity:1!important;visibility:visible!important;overflow:visible!important;fill:none!important;stroke:#fff!important;stroke-width:2.5!important;pointer-events:none!important;vertical-align:middle!important;}'
-    + '#cb-send svg *{stroke:#fff!important;fill:none!important;opacity:1!important;visibility:visible!important;display:inline!important;stroke-width:2.5!important;}'
+    + '#cb-send svg{display:block!important;width:16px!important;height:16px!important;min-width:16px!important;min-height:16px!important;flex-shrink:0!important;opacity:1!important;visibility:visible!important;overflow:visible!important;fill:none!important;stroke:#fff!important;stroke-width:2.5!important;pointer-events:none!important;}'
+    + '#cb-send svg *{stroke:#fff!important;fill:none!important;opacity:1!important;visibility:visible!important;display:inline!important;}'
     + '#lead-bot #cb-input-bar#cb-input-bar button#cb-send{width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;border-radius:50%!important;background:linear-gradient(135deg,#0154B1,#1a7fe8)!important;border:none!important;display:flex!important;align-items:center!important;justify-content:center!important;opacity:1!important;visibility:visible!important;overflow:visible!important;color:#fff!important;}'
-    + '#lead-bot #cb-input-bar#cb-input-bar button#cb-send svg#cb-send-icon{display:block!important;width:16px!important;height:16px!important;min-width:16px!important;min-height:16px!important;max-width:none!important;max-height:none!important;fill:none!important;stroke:#ffffff!important;stroke-width:2.5!important;opacity:1!important;visibility:visible!important;overflow:visible!important;color:#ffffff!important;vertical-align:middle!important;}'
-    + '#lead-bot #cb-input-bar#cb-input-bar button#cb-send svg#cb-send-icon *{stroke:#ffffff!important;fill:none!important;opacity:1!important;visibility:visible!important;display:inline!important;stroke-width:2.5!important;}'
+    + '#lead-bot #cb-input-bar#cb-input-bar button#cb-send svg#cb-send-icon{display:block!important;width:16px!important;height:16px!important;min-width:16px!important;min-height:16px!important;fill:none!important;stroke:#ffffff!important;stroke-width:2.5!important;opacity:1!important;visibility:visible!important;overflow:visible!important;color:#ffffff!important;}'
+    + '#lead-bot #cb-input-bar#cb-input-bar button#cb-send svg#cb-send-icon *{stroke:#ffffff!important;fill:none!important;opacity:1!important;visibility:visible!important;display:inline!important;}'
     + '.cb-schedule{display:none;text-align:center;background:linear-gradient(135deg,#F09300,#f5a623);color:#fff!important;font-weight:700;font-size:13.5px;font-family:"Outfit",sans-serif;text-decoration:none!important;padding:13px;letter-spacing:.2px;transition:filter .2s;flex-shrink:0;}'
     + '.cb-schedule:hover{filter:brightness(.92);}'
     + '@media (max-width:480px){#lead-bot{bottom:0;right:0;left:0;width:100%;animation:none;}.cb-card{width:100%;border-radius:24px 24px 0 0;max-height:88vh;overflow:hidden;border:none;}.cb-body{max-height:42vh!important;}.cb-qbtns button,.cb-bbtns button{font-size:12px!important;padding:9px 10px!important;}.cb-input-bar input{font-size:13px;box-sizing:border-box;}#cb-greeting-bubble{right:8px;bottom:100px;max-width:calc(100vw - 80px);}#bot-launcher{bottom:16px;right:16px;width:60px;height:60px;}#bot-launcher img{width:54px;height:54px;}.cb-online-dot{bottom:2px;right:2px;width:12px;height:12px;}}';
@@ -275,8 +275,8 @@
         '<div class="cb-input-bar" id="cb-input-bar" style="display:none!important;">' +
           '<input type="text" id="cb-input" placeholder="Type your answer..." autocomplete="off" />' +
           '<button id="cb-send" aria-label="Send" style="opacity:1!important;visibility:visible!important;">' +
-            '<svg id="cb-send-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block!important;opacity:1!important;visibility:visible!important;overflow:visible!important;max-width:none!important;max-height:none!important;vertical-align:middle!important;">' +
-              '<line x1="12" y1="19" x2="12" y2="5" style="stroke:#fff!important;fill:none!important;opacity:1!important;display:inline!important;"/><polyline points="5 12 12 5 19 12" style="stroke:#fff!important;fill:none!important;opacity:1!important;display:inline!important;"/>' +
+            '<svg id="cb-send-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block!important;opacity:1!important;visibility:visible!important;">' +
+              '<line x1="12" y1="19" x2="12" y2="5" style="stroke:#fff!important;opacity:1!important;"/><polyline points="5 12 12 5 19 12" style="stroke:#fff!important;opacity:1!important;"/>' +
             '</svg>' +
           '</button>' +
         '</div>' +
@@ -297,11 +297,9 @@
     var inputBar = document.getElementById('cb-input-bar');
     var schedBar = document.getElementById('cb-schedule-bar');
 
-    /* AI conversation history */
+    /* AI conversation history — used whenever the user types free text
+     * instead of clicking a scripted button. */
     var chatHistory = [];
-    /* lead collection phase: null = AI chat, 'name'/'phone'/'email' = collecting */
-    var collectPhase = null;
-    var chatDone = false;
 
     /* Derive API endpoint from widget.js src — same origin as the widget */
     var API_URL = (function () {
@@ -344,6 +342,68 @@
     }
     function hideTyping() { var t = document.getElementById('cb-typing'); if (t) t.remove(); }
 
+    function botReply(msg, cb, delay) {
+      showTyping();
+      setTimeout(function () {
+        hideTyping();
+        addBotMsg(msg);
+        if (cb) cb();
+      }, delay || 1200);
+    }
+
+    function makeBackBtn(label, onClick) {
+      var b = document.createElement('button');
+      b.className = 'cb-back-btn';
+      b.innerHTML =
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0154B1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;display:block;">' +
+        '<polyline points="15 18 9 12 15 6"/></svg><span>' + label + '</span>';
+      b.onclick = onClick;
+      return b;
+    }
+
+    function isOffTopic(v) {
+      var offTopicKw = ['price', 'pricing', 'cost', 'how much', 'what do you', 'who are you', 'services', 'what is', 'can you', 'help', 'support', 'contact', 'discount', 'trial'];
+      return offTopicKw.some(function (k) { return v.toLowerCase().indexOf(k) > -1; });
+    }
+
+    /* ── AI CALL ──
+     * Used whenever the user types free text instead of clicking a button.
+     * Sends the running chatHistory to the /api/chat proxy (OpenAI GPT-4o-mini)
+     * and renders the reply like a normal bot message. The scripted step/
+     * lead-state machine is left untouched — askAI only supplies the
+     * conversational reply text; callers still drive step transitions. */
+    function askAI(userText, silent, onDone) {
+      if (!silent) {
+        chatHistory.push({ role: 'user', content: userText });
+      }
+      showTyping();
+      inputEl.disabled = true;
+
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: chatHistory })
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        hideTyping();
+        inputEl.disabled = false;
+        var reply = data.reply || "I'm having a little trouble right now. Please try again or call us at 406-936-3049.";
+        chatHistory.push({ role: 'assistant', content: reply });
+        addBotMsg(reply.replace(/\n/g, '<br>'));
+        resetIdleTimer();
+        setTimeout(function () { inputEl.focus(); }, 100);
+        if (onDone) onDone(reply);
+      })
+      .catch(function () {
+        hideTyping();
+        inputEl.disabled = false;
+        addBotMsg("Sorry, I'm having trouble connecting right now. Please call us at 406-936-3049 or email contact@demskigroup.com.");
+        resetIdleTimer();
+        if (onDone) onDone(null);
+      });
+    }
+
     function showInputBar() {
       inputBar.setAttribute('style', 'display:flex!important;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.45);flex-shrink:0;');
       setTimeout(function () { scroll(); inputEl.focus(); }, 50);
@@ -363,16 +423,21 @@
       var d = document.getElementById(IDLE_BTNS_ID); if (d) d.remove();
     }
 
+    function scheduleIdleTimer() {
+      clearTimeout(idleTimer);
+      if (step < 7) idleTimer = setTimeout(showIdleReminder, idleInterval);
+    }
+
     function resetIdleTimer() {
       clearTimeout(idleTimer);
       idleInterval = 60000;
       removeIdleReminder();
       awaitingIdleResponse = false;
-      if (!chatDone) idleTimer = setTimeout(showIdleReminder, idleInterval);
+      scheduleIdleTimer();
     }
 
     function showIdleReminder() {
-      if (chatDone || awaitingIdleResponse) return;
+      if (step >= 7 || awaitingIdleResponse) return;
       awaitingIdleResponse = true;
       idleInterval = Math.min(idleInterval * 2, 960000);
       var win = document.getElementById('lead-bot');
@@ -382,24 +447,42 @@
         idleTimer = setTimeout(showIdleReminder, idleInterval);
       } else {
         removeIdleReminder();
+        hideInputBar();
         var wrap = document.createElement('div');
         wrap.id = IDLE_MSG_ID;
         wrap.className = 'cb-bot-msg-wrap';
         wrap.setAttribute('style', WRAP_STYLE);
         wrap.innerHTML = avImg() + '<div class="cb-bot-msg" style="' + BOT_STYLE + '">Hi, are you still there? &#x1F44B;</div>';
         msgs.appendChild(wrap); scroll();
-        var div = document.createElement('div');
-        div.className = 'cb-qbtns cb-grid'; div.id = IDLE_BTNS_ID;
-        var yes = document.createElement('button'); yes.textContent = 'Yes, still here!';
-        yes.onclick = function () { removeIdleReminder(); awaitingIdleResponse = false; addUserMsg('Yes, still here!'); resetIdleTimer(); addBotMsg('Great! Feel free to keep asking — I\'m here to help. &#x1F60A;'); };
-        var no = document.createElement('button'); no.textContent = "No, I'm done";
-        no.onclick = function () {
-          removeIdleReminder(); addUserMsg("No, I'm done");
-          awaitingIdleResponse = false; clearTimeout(idleTimer);
-          addBotMsg('No problem! Feel free to come back anytime. &#x1F603;');
-        };
-        div.appendChild(yes); div.appendChild(no); msgs.appendChild(div); scroll();
+        showIdleButtons();
       }
+    }
+
+    function showIdleButtons() {
+      var old = document.getElementById(IDLE_BTNS_ID); if (old) old.remove();
+      var div = document.createElement('div');
+      div.className = 'cb-qbtns cb-grid'; div.id = IDLE_BTNS_ID;
+      var yes = document.createElement('button'); yes.textContent = 'Yes, still here!';
+      yes.onclick = function () { removeIdleReminder(); addUserMsg('Yes, still here!'); resumeStep(); };
+      var no = document.createElement('button'); no.textContent = "No, I'm done";
+      no.onclick = function () {
+        removeIdleReminder(); addUserMsg("No, I'm done");
+        awaitingIdleResponse = false; clearTimeout(idleTimer);
+        botReply('No problem! Feel free to come back anytime. &#x1F603;');
+      };
+      div.appendChild(yes); div.appendChild(no); msgs.appendChild(div); scroll();
+    }
+
+    function resumeStep() {
+      awaitingIdleResponse = false; resetIdleTimer();
+      if (step === 1) { botReply('No problem! What type of project is it?', function () { showIntentOptions(lead.intent); }); return; }
+      if (step === 2) { showProjectDescStep(); return; }
+      if (step === 3) { showBudgetStep(); return; }
+      if (step === 4) { showInputBar(); botReply("What's your name?"); return; }
+      if (step === 5) { showInputBar(); botReply("What's the best phone number to reach you?"); return; }
+      if (step === 6) { showInputBar(); botReply("What's the best email to reach you?"); return; }
+      if (step === 7) { botReply('Our team already has your details and will be in touch shortly!'); return; }
+      botReply('No problem! Take your time.');
     }
 
     /* ── EXPAND UI ── */
@@ -444,12 +527,9 @@
     function startChat() {
       document.getElementById('cb-welcome').style.display = 'none';
       msgs.classList.remove('cb-body-hidden');
-      var s1 = document.getElementById('cb-step1'); if (s1) s1.remove();
       showInputBar();
       showScheduleBar();
       resetIdleTimer();
-      /* Start with a friendly AI opening */
-      askAI('Hello! I just opened the chat.', true);
     }
 
     /* ── TOGGLE BOT ── */
@@ -469,87 +549,105 @@
       }
     }
 
-    /* ── AI CALL ── */
-    function askAI(userText, silent) {
-      if (!silent) {
-        chatHistory.push({ role: 'user', content: userText });
-      }
-      showTyping();
-      inputEl.disabled = true;
-
-      fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: chatHistory })
-      })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        hideTyping();
-        inputEl.disabled = false;
-        var reply = data.reply || "I'm having a little trouble right now. Please try again or call us at 406-936-3049.";
-        chatHistory.push({ role: 'assistant', content: reply });
-        addBotMsg(reply.replace(/\n/g, '<br>'));
-        resetIdleTimer();
-        setTimeout(function () { inputEl.focus(); }, 100);
-
-        /* Check if AI is asking for contact info — transition to lead collection */
-        var lower = reply.toLowerCase();
-        if (!collectPhase && (
-          lower.indexOf("can i grab your name") > -1 ||
-          lower.indexOf("what's your name") > -1 ||
-          lower.indexOf("may i get your name") > -1 ||
-          lower.indexOf("could i get your name") > -1
-        )) {
-          collectPhase = 'name';
-          inputEl.placeholder = 'Your name...';
-        }
-      })
-      .catch(function () {
-        hideTyping();
-        inputEl.disabled = false;
-        addBotMsg("Sorry, I'm having trouble connecting right now. Please call us at 406-936-3049 or email contact@demskigroup.com.");
-        resetIdleTimer();
+    /* ── STEP 1: Intent ── */
+    function step1Handler(val) {
+      expandUI();
+      var s1 = document.getElementById('cb-step1'); if (s1) s1.remove();
+      addUserMsg(val); lead.intent = val; step = 1; resetIdleTimer();
+      var followUp = {
+        'New startup or app idea':  'Love it! Tell me more, what kind of app or product are you thinking about?',
+        'Software for my business': 'Great! What problem are you trying to solve in your business?',
+        'Digital marketing help':   'Nice! What are you hoping to improve: traffic, leads, or sales?',
+        'Just exploring':           "That's totally fine! Can you tell me a bit about what you have in mind?"
+      };
+      botReply(followUp[val] || "Can you tell me a bit about it or if you already have a design in mind?", function () {
+        showIntentOptions(val);
       });
     }
 
-    /* ── LEAD COLLECTION (name/phone/email after AI qualifies) ── */
-    function handleLeadInput(val) {
-      if (collectPhase === 'name') {
-        if (val.length < 2 || /^\d+$/.test(val)) { addBotMsg('Could you enter your full name please?'); return; }
-        lead.name = val; collectPhase = 'phone';
-        inputEl.placeholder = 'Phone number...';
-        addBotMsg('Nice to meet you, ' + val + '! What\'s the best phone number to reach you?');
-        return;
-      }
-      if (collectPhase === 'phone') {
-        var digits = val.replace(/\D/g, '');
-        if (digits.length < 7) { addBotMsg("That doesn't look like a valid phone number. Could you double-check?"); return; }
-        lead.phone = val; collectPhase = 'email';
-        inputEl.placeholder = 'Email address...';
-        addBotMsg("Got it! And what's the best email address to reach you?");
-        return;
-      }
-      if (collectPhase === 'email') {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { addBotMsg("That doesn't look right. Could you double-check your email address?"); return; }
-        lead.email = val; collectPhase = null;
-        inputEl.placeholder = 'Type your answer...';
-        showFinalCTA();
-        return;
-      }
+    /* ── INTENT OPTIONS ── */
+    function showIntentOptions(intent) {
+      var intentOptions = {
+        'New startup or app idea':   ['Mobile App', 'Web App', 'SaaS Platform', 'eCommerce', 'Other'],
+        'Software for my business':  ['Automate Workflows', 'Customer Management', 'Reporting & Analytics', 'Employee Tools', 'Other'],
+        'Digital marketing help':    ['Increase Website Traffic', 'Generate More Leads', 'Social Media Growth', 'Paid Advertising', 'Other'],
+        'Just exploring':            ['Planning a Future Project', 'Comparing Vendors', 'Learning About Tech', 'Just Curious']
+      };
+      var opts = intentOptions[intent] || ['Mobile App', 'Web App', 'Something else'];
+      var div = document.createElement('div'); div.className = 'cb-qbtns cb-grid'; div.id = 'cb-intent';
+      opts.forEach(function (o) {
+        var b = document.createElement('button'); b.textContent = o;
+        b.onclick = function () {
+          var el = document.getElementById('cb-intent'); if (el) el.remove();
+          addUserMsg(o); lead.intent_detail = o;
+          step = 2;
+          showProjectDescStep();
+        };
+        div.appendChild(b);
+      });
+      div.appendChild(makeBackBtn('Back', function () {
+        var el = document.getElementById('cb-intent'); if (el) el.remove();
+        lead.intent = ''; step = 0;
+        botReply('No problem! What kind of project do you need help bringing to life?', function () {
+          var s1 = document.createElement('div'); s1.className = 'cb-qbtns cb-grid'; s1.id = 'cb-step1';
+          ['New startup or app idea', 'Software for my business', 'Digital marketing help', 'Just exploring'].forEach(function (v) {
+            var b = document.createElement('button'); b.textContent = v;
+            b.onclick = function () { step1Handler(v); }; s1.appendChild(b);
+          });
+          msgs.appendChild(s1); scroll();
+        });
+      }));
+      msgs.appendChild(div); scroll();
+    }
+
+    /* ── PROJECT DESCRIPTION (free text) ── */
+    function showProjectDescStep() {
+      step = 2; resetIdleTimer();
+      botReply("Can you tell me a bit about your project? Feel free to share as much or as little as you'd like. Any details help!", function () {
+        showInputBar();
+        inputEl.placeholder = 'Describe your project...';
+      });
+    }
+
+    /* ── BUDGET ── */
+    function showBudgetStep() {
+      step = 3; resetIdleTimer();
+      hideInputBar();
+      botReply('Do you have a budget range in mind for this project?', function () {
+        var div = document.createElement('div'); div.className = 'cb-bbtns cb-grid'; div.id = 'cb-budget';
+        ['Under $10k', '$10k - $25k', '$25k - $50k', '$50k+', 'Not sure yet'].forEach(function (bv) {
+          var btn = document.createElement('button'); btn.textContent = bv;
+          btn.onclick = function () {
+            var el = document.getElementById('cb-budget'); if (el) el.remove();
+            addUserMsg(bv); lead.budget = bv;
+            step = 4; resetIdleTimer();
+            showInputBar();
+            inputEl.placeholder = 'Type your answer...';
+            setTimeout(function () { inputEl.focus(); }, 50);
+            botReply("Thanks, this helps a lot! Let me grab your details so our team can reach out.<br><br>What's your name?");
+          };
+          div.appendChild(btn);
+        });
+        div.appendChild(makeBackBtn('Back', function () {
+          var el = document.getElementById('cb-budget'); if (el) el.remove();
+          lead.budget = ''; step = 2; showProjectDescStep();
+        }));
+        msgs.appendChild(div); scroll();
+      });
     }
 
     /* ── FINAL CTA ── */
     function showFinalCTA() {
-      chatDone = true; clearTimeout(idleTimer); hideInputBar();
-      addBotMsg("Awesome! Based on what you've shared, the best next step is a quick call or Google Meet to go over your project!");
-      setTimeout(function () {
+      step = 7; clearTimeout(idleTimer);
+      hideInputBar();
+      botReply("Awesome! Based on what you've shared, the best next step is a quick call or Google Meet to go over your project!", function () {
         var div = document.createElement('div'); div.className = 'cb-cta-btns'; div.id = 'cb-cta';
         var book = document.createElement('button'); book.className = 'cb-cta-primary'; book.textContent = 'Book a Google Meet';
         book.onclick = function () { handleCTA('Book a Google Meet'); window.open(CALENDLY_URL, '_blank'); };
         var em = document.createElement('button'); em.className = 'cb-cta-secondary'; em.textContent = 'Send me info by email';
         em.onclick = function () { handleCTA('Send me info by email'); };
         div.appendChild(book); div.appendChild(em); msgs.appendChild(div); scroll();
-      }, 400);
+      }, 1200);
     }
 
     function handleCTA(choice) {
@@ -558,13 +656,13 @@
       inputEl.disabled = true; inputEl.placeholder = 'Chat complete';
       var sendBtn = document.querySelector('#cb-input-bar button');
       if (sendBtn) sendBtn.disabled = true;
-      addBotMsg(choice === 'Book a Google Meet'
-        ? "Great! We're opening the calendar now. Pick a time that works for you — a confirmation will be sent to " + lead.email + '!'
+      botReply(choice === 'Book a Google Meet'
+        ? "Great! We're opening the calendar now. Pick a time that works for you. A confirmation will also be sent to " + lead.email + '!'
         : 'Perfect! We\'ll send everything over to ' + lead.email + ' shortly. Talk soon! &#x1F603;');
       submitLead();
     }
 
-    /* ── SUBMIT LEAD via EmailJS ── */
+    /* ── SUBMIT ── */
     function submitLead() {
       var p = {
         intent: lead.intent, intent_detail: lead.intent_detail,
@@ -583,26 +681,78 @@
 
     /* ── INPUT HANDLER ── */
     function handleInput() {
-      var val = inputEl.value.trim(); if (!val || inputEl.disabled) return;
+      var val = inputEl.value.trim(); if (!val) return;
       if (awaitingIdleResponse) {
-        removeIdleReminder(); awaitingIdleResponse = false;
-        addUserMsg(val); inputEl.value = ''; resetIdleTimer();
-        chatHistory.push({ role: 'user', content: val });
-        askAI(val, true);
+        removeIdleReminder(); addUserMsg(val); inputEl.value = ''; resumeStep(); return;
+      }
+      addUserMsg(val); inputEl.value = ''; resetIdleTimer();
+
+      /* Step 0: user types before picking an option — be conversational */
+      if (step === 0) {
+        var lower = val.toLowerCase();
+        var intentGuess = null;
+        if (/startup|app idea|new product|mvp|launch/.test(lower)) intentGuess = 'New startup or app idea';
+        else if (/business|company|software|workflow|automate/.test(lower)) intentGuess = 'Software for my business';
+        else if (/market|seo|ads|traffic|social|leads/.test(lower)) intentGuess = 'Digital marketing help';
+        if (intentGuess) { step1Handler(intentGuess); return; }
+        /* No clear intent match — let the AI carry the conversation instead
+         * of forcing the button list again. */
+        askAI(val, false, function () {
+          var s1 = document.createElement('div'); s1.className = 'cb-qbtns cb-grid'; s1.id = 'cb-step1';
+          ['New startup or app idea', 'Software for my business', 'Digital marketing help', 'Just exploring'].forEach(function (v) {
+            var b = document.createElement('button'); b.textContent = v;
+            b.onclick = function () { step1Handler(v); }; s1.appendChild(b);
+          });
+          msgs.appendChild(s1); scroll();
+        });
         return;
       }
-      addUserMsg(val); inputEl.value = '';
-      resetIdleTimer();
 
-      /* Lead collection phase — don't send to AI */
-      if (collectPhase) {
-        handleLeadInput(val);
+      if (step === 1) {
+        var el = document.getElementById('cb-intent'); if (el) el.remove();
+        /* User typed instead of picking an intent-detail button — ask the AI
+         * to respond conversationally, then re-show the button options. */
+        askAI(val, false, function () { showIntentOptions(lead.intent); });
         return;
       }
 
-      /* Normal AI conversation */
-      lead.project_description = lead.project_description || val;
-      askAI(val, false);
+      /* Step 2: project description free text — let the AI respond
+       * conversationally to what they typed, then continue the scripted
+       * flow into the budget step. */
+      if (step === 2) {
+        lead.project_description = val;
+        inputEl.placeholder = 'Type your answer...';
+        askAI(val, false, function () { showBudgetStep(); });
+        return;
+      }
+
+      if (step === 3) { showBudgetStep(); return; }
+
+      if ((step === 4 || step === 5 || step === 6) && isOffTopic(val)) {
+        var q = step === 4 ? "What's your name?" : step === 5 ? "What's your phone number?" : "What's your email address?";
+        /* Off-topic question during lead capture — answer via AI, then
+         * steer back to the field we still need. */
+        askAI(val, false, function (reply) {
+          if (reply === null) return; /* error path already showed a message */
+          botReply('For now: ' + q);
+        });
+        return;
+      }
+      if (step === 4) {
+        if (val.length < 2 || /^\d+$/.test(val)) { botReply('Could you enter your full name please?'); return; }
+        lead.name = val; step = 5;
+        botReply('Nice to meet you, ' + val + '! What\'s the best phone number to reach you?'); return;
+      }
+      if (step === 5) {
+        var digits = val.replace(/\D/g, '');
+        if (digits.length < 7) { botReply("That doesn't look like a valid phone number. Could you double-check?"); return; }
+        lead.phone = val; step = 6;
+        botReply("Got it! And what's the best email address to reach you?"); return;
+      }
+      if (step === 6) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { botReply("That doesn't look right. Could you double-check your email address?"); return; }
+        lead.email = val; showFinalCTA(); return;
+      }
     }
 
     /* ── WIRE UP DOM EVENTS ── */
@@ -612,19 +762,10 @@
     document.getElementById('cb-send').onclick           = handleInput;
     inputEl.addEventListener('keypress', function (e) { if (e.key === 'Enter') handleInput(); });
 
-    /* Initial step1 quick-buttons still work as shortcuts */
     var s1btns = document.querySelectorAll('#cb-step1 [data-step1]');
     for (var i = 0; i < s1btns.length; i++) {
       (function (btn) {
-        btn.onclick = function () {
-          var val = btn.getAttribute('data-step1');
-          var s1 = document.getElementById('cb-step1'); if (s1) s1.remove();
-          expandUI();
-          addUserMsg(val); lead.intent = val;
-          msgs.classList.remove('cb-body-hidden');
-          showInputBar(); showScheduleBar(); resetIdleTimer();
-          askAI(val, false);
-        };
+        btn.onclick = function () { step1Handler(btn.getAttribute('data-step1')); };
       })(s1btns[i]);
     }
 
@@ -647,6 +788,8 @@
       }, 800);
     }
 
+    // Use DOMContentLoaded so the launcher appears fast (~1.5s total),
+    // without waiting for all images/fonts to finish loading.
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', function () { setTimeout(launch, 700); });
     } else {
