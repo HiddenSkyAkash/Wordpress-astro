@@ -31,16 +31,19 @@
   var AVATAR_URL    = scriptAttr('data-avatar', BASE_URL + 'avatar-alex.webp');
   var AVATAR_FB     = scriptAttr('data-avatar-fallback', AVATAR_URL);
   var CALENDLY_URL  = scriptAttr('data-calendly', 'https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ3loQplPyCXe28FPP0trIgOCmhJqwKCXka1x3uCkblaAFtklpetKpkyi6glNBGxVR8jpOQenySG');
-  var EJS_KEY       = scriptAttr('data-ejs-key', 'nedYqWwwPWVZZVX0_');
-  var EJS_SVC       = scriptAttr('data-ejs-service', 'service_f4tf0yn');
-  var EJS_LEAD_TPL  = scriptAttr('data-ejs-lead-template', 'template_c6hi8ir');
-  var EJS_CONF_TPL  = scriptAttr('data-ejs-confirm-template', 'template_7kz7hgj');
   var BOT_NAME      = scriptAttr('data-bot-name', 'Alex');
   var BOT_TITLE     = scriptAttr('data-bot-title', 'The Demski Group');
 
   /* ── CONSTANTS ── */
   var IDLE_MSG_ID  = 'cb-idle-msg';
   var IDLE_BTNS_ID = 'cb-idle-btns';
+
+  var INTENT_OPTIONS = {
+    'New startup or app idea':   ['Mobile App', 'Web App', 'SaaS Platform', 'eCommerce', 'Other'],
+    'Software for my business':  ['Automate Workflows', 'Customer Management', 'Reporting & Analytics', 'Employee Tools', 'Other'],
+    'Digital marketing help':    ['Increase Website Traffic', 'Generate More Leads', 'Social Media Growth', 'Paid Advertising', 'Other'],
+    'Just exploring':            ['Planning a Future Project', 'Comparing Vendors', 'Learning About Tech', 'Just Curious']
+  };
 
   var AV_STYLE =
     'width:28px!important;height:28px!important;min-width:28px!important;' +
@@ -64,6 +67,10 @@
   /* ── STATE ── */
   var step = 0;
   var expanded = false;
+  var cardTimer = null;
+  var bubbleTimer = null;
+  var badgeTimer = null;
+  var teaserFlowDone = false;
   var idleTimer = null;
   var idleInterval = 60000;
   var awaitingIdleResponse = false;
@@ -80,7 +87,7 @@
     utm_source: fp.utm_source || '', utm_campaign: fp.utm_campaign || '',
     utm_medium: fp.utm_medium || '', utm_term: fp.utm_term || '',
     utm_content: fp.utm_content || '', gclid: fp.gclid || '',
-    intent: '', intent_detail: '', project_description: '', budget: '',
+    intent: '', intent_detail: '', timeline: '', budget: '', project_notes: '',
     name: '', phone: '', email: '', cta_choice: ''
   };
 
@@ -100,8 +107,18 @@
     } catch (e) { return null; }
   })();
 
-  /* Mark audio as unlocked after any user interaction — no audible play needed */
-  document.addEventListener('click', function () { _snd && (_snd.load()); }, { once: true });
+  /* iOS Safari only allows audio playback triggered synchronously inside a user
+   * gesture — load() alone doesn't unlock later async play() calls (e.g. from the
+   * badge/idle timers). Play+immediately-pause once inside the first tap/click so
+   * the session is unlocked for every subsequent programmatic play(). */
+  function unlockSnd() {
+    document.removeEventListener('touchstart', unlockSnd);
+    document.removeEventListener('click', unlockSnd);
+    if (!_snd) return;
+    _snd.play().then(function () { _snd.pause(); _snd.currentTime = 0; }).catch(function () {});
+  }
+  document.addEventListener('touchstart', unlockSnd, { passive: true });
+  document.addEventListener('click', unlockSnd);
 
   function playChime() {
     if (!_snd) return;
@@ -114,25 +131,47 @@
 
   /* ── STYLES ── */
   var CSS = ''
-    + '#bot-launcher{position:fixed;bottom:32px;right:32px;width:98px;height:98px;border-radius:50%;cursor:pointer;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:transparent;opacity:0;transform:translateY(60px) scale(0.7);transition:opacity .45s ease,transform .45s cubic-bezier(.34,1.56,.64,1);font-family:"Outfit",sans-serif;}'
+    + '#bot-launcher{position:fixed;bottom:52px;right:52px;width:98px;height:98px;border-radius:50%;cursor:pointer;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:transparent;opacity:0;transform:translateY(60px) scale(0.7);transition:opacity .45s ease,transform .45s cubic-bezier(.34,1.56,.64,1);font-family:"Outfit",sans-serif;}'
     + '#bot-launcher.cb-launcher-visible{opacity:1;transform:translateY(0) scale(1);}'
     + '#bot-launcher::before{content:"";position:absolute;inset:-3px;border-radius:50%;background:linear-gradient(135deg,#0154B1,#4facfe,#0154B1);z-index:-1;animation:cb-ring-spin 4s linear infinite;}'
     + '@keyframes cb-ring-spin{to{transform:rotate(360deg);}}'
-    + '#bot-launcher img{width:92px;height:92px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 6px 24px rgba(1,84,177,0.28);transition:transform .3s ease;}'
-    + '#bot-launcher:hover img{transform:scale(1.06);}'
+    + '#bot-launcher img{width:92px;height:92px;border-radius:50%;object-fit:cover;object-position:50% 30%;transform:scale(1.1);border:3px solid #fff;box-shadow:0 6px 24px rgba(1,84,177,0.28);transition:transform .3s ease;}'
+    + '#bot-launcher:hover img{transform:scale(1.16);}'
     + '.cb-online-dot{position:absolute;bottom:4px;right:4px;width:14px;height:14px;background:#22c55e;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 2px rgba(34,197,94,0.25);}'
     + '.cb-launcher-badge{position:absolute;top:2px;right:2px;width:22px;height:22px;background:#e53e3e;color:#fff;border-radius:50%;border:2px solid #fff;font-size:12px;font-weight:700;font-family:"Outfit",sans-serif;display:none;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(229,62,62,0.5);animation:cb-badge-pop .3s cubic-bezier(.34,1.56,.64,1) both;}'
     + '.cb-launcher-badge.cb-badge-on{display:flex!important;}'
     + '@keyframes cb-badge-pop{from{transform:scale(0);}to{transform:scale(1);}}'
-    + '#cb-greeting-bubble{position:fixed;bottom:110px;right:100px;z-index:2147483646;background:#fff;border-radius:16px 16px 4px 16px;box-shadow:0 12px 40px rgba(0,0,0,0.13);padding:14px 16px 12px;max-width:220px;font-family:"Outfit",sans-serif;opacity:0;transform:translateY(10px) scale(.94);transition:opacity .3s,transform .3s;pointer-events:none;}'
+    + '#bot-launcher.cb-shake{animation:cb-shake 2s ease-in-out 0s 1;}'
+    + '@keyframes cb-shake{0%,100%{transform:translateY(0) scale(1) translateX(0) rotate(0);}5%{transform:translateY(0) scale(1) translateX(-6px) rotate(-4deg);}10%{transform:translateY(0) scale(1) translateX(6px) rotate(4deg);}15%{transform:translateY(0) scale(1) translateX(-6px) rotate(-4deg);}20%{transform:translateY(0) scale(1) translateX(6px) rotate(4deg);}25%{transform:translateY(0) scale(1) translateX(-6px) rotate(-4deg);}30%{transform:translateY(0) scale(1) translateX(6px) rotate(4deg);}35%{transform:translateY(0) scale(1) translateX(-5px) rotate(-3deg);}40%{transform:translateY(0) scale(1) translateX(5px) rotate(3deg);}45%{transform:translateY(0) scale(1) translateX(-4px) rotate(-2deg);}50%{transform:translateY(0) scale(1) translateX(4px) rotate(2deg);}55%{transform:translateY(0) scale(1) translateX(-3px) rotate(-2deg);}60%{transform:translateY(0) scale(1) translateX(3px) rotate(2deg);}65%{transform:translateY(0) scale(1) translateX(-2px) rotate(-1deg);}70%{transform:translateY(0) scale(1) translateX(2px) rotate(1deg);}75%,100%{transform:translateY(0) scale(1) translateX(0) rotate(0);}}'
+    + '#cb-greeting-bubble{position:fixed;bottom:66px;right:162px;z-index:2147483646;background:#fff;border:2px solid #0154B1;border-radius:18px 18px 18px 4px;box-shadow:0 12px 40px rgba(0,0,0,0.16);padding:12px 16px;max-width:240px;font-family:"Outfit",sans-serif;opacity:0;transform:translateX(10px) scale(.94);transition:opacity .3s,transform .3s;pointer-events:none;display:flex;align-items:center;gap:10px;box-sizing:border-box;}'
     + '#cb-greeting-bubble.cb-bv{opacity:1;transform:none;pointer-events:all;}'
-    + '#cb-greeting-bubble.cb-bh{opacity:0;transform:translateY(10px) scale(.94);pointer-events:none;}'
-    + '#cb-greeting-bubble p{font-size:13px;color:#333;margin:0 0 10px;line-height:1.5;padding-right:14px;}'
-    + '#cb-greeting-bubble button{background:#0154B1;color:#fff;border:none;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;width:100%;font-family:"Outfit",sans-serif;transition:background .2s;}'
-    + '#cb-greeting-bubble button:hover{background:#0146a0;}'
-    + '.cb-bubble-close{position:absolute;top:8px;right:10px;font-size:16px;color:#ccc;cursor:pointer;line-height:1;}'
+    + '#cb-greeting-bubble.cb-bh{opacity:0;transform:translateX(10px) scale(.94);pointer-events:none;}'
+    + '#cb-greeting-bubble p{font-size:14px;color:#222;margin:0;line-height:1.4;font-weight:600;flex:1;cursor:pointer;}'
+    + '#cb-greeting-bubble .cb-bubble-av{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #fff;box-shadow:0 0 0 2px #0154B1;}'
+    + '.cb-bubble-close{position:absolute;top:6px;right:8px;font-size:15px;color:#ccc;cursor:pointer;line-height:1;}'
     + '.cb-bubble-close:hover{color:#666;}'
-    + '#lead-bot{position:fixed;bottom:108px;right:28px;z-index:2147483646;animation:cb-pop-in .35s cubic-bezier(.34,1.56,.64,1) both;}'
+    + '#cb-greeting-card{position:fixed;bottom:40px;right:40px;z-index:2147483647;background:#fff;border:2px solid #0154B1;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.18);padding:18px 20px 20px;width:360px;font-family:"Outfit",sans-serif;opacity:0;transform:translateY(16px) scale(.95);transition:opacity .32s,transform .32s;pointer-events:none;box-sizing:border-box;}'
+    + '#cb-greeting-card.cb-gv{opacity:1;transform:none;pointer-events:all;}'
+    + '#cb-greeting-card.cb-gh{opacity:0;transform:translateY(16px) scale(.95);pointer-events:none;}'
+    + '.cb-gc-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;}'
+    + '.cb-gc-av-wrap{position:relative;flex-shrink:0;}'
+    + '.cb-gc-av-wrap img{width:44px;height:44px;border-radius:50%;object-fit:cover;display:block;}'
+    + '.cb-gc-av-wrap::before{content:"";position:absolute;inset:-2px;border-radius:50%;background:linear-gradient(135deg,#0154B1,#4facfe);z-index:-1;}'
+    + '.cb-gc-online{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;background:#22c55e;border-radius:50%;border:2px solid #fff;}'
+    + '.cb-gc-name{font-size:15px;font-weight:700;color:#111;}'
+    + '.cb-gc-time{font-size:11.5px;color:#9aa1ad;margin-top:1px;}'
+    + '.cb-gc-close{margin-left:auto;font-size:18px;color:#bbb;cursor:pointer;line-height:1;padding:2px;}'
+    + '.cb-gc-close:hover{color:#666;}'
+    + '.cb-gc-question{font-size:15px;font-weight:600;color:#1a1d23;line-height:1.4;margin:0 0 14px;}'
+    + '.cb-gc-yn{display:flex;gap:10px;margin-bottom:14px;}'
+    + '.cb-gc-yn button{flex:1;background:#eaf3fe;color:#0154B1;border:none;padding:10px 0;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:"Outfit",sans-serif;transition:background .18s;}'
+    + '.cb-gc-yn button:hover{background:#0154B1;color:#fff;}'
+    + '.cb-gc-input{display:flex;align-items:center;border:1.5px solid #e7eaf0;border-radius:24px;padding:6px 6px 6px 16px;}'
+    + '.cb-gc-input input{flex:1;border:none;outline:none;font-size:13.5px;font-family:"Outfit",sans-serif;color:#111;background:transparent;}'
+    + '.cb-gc-input input::placeholder{color:#b3b9c4;}'
+    + '.cb-gc-input button{width:32px;height:32px;border-radius:50%;background:#f0f3f8;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#0154B1;transition:background .18s;}'
+    + '.cb-gc-input button:hover{background:#0154B1;color:#fff;}'
+    + '#lead-bot{position:fixed;bottom:128px;right:48px;z-index:2147483646;animation:cb-pop-in .35s cubic-bezier(.34,1.56,.64,1) both;}'
     + '@keyframes cb-pop-in{from{opacity:0;transform:translateY(20px) scale(.96);}to{opacity:1;transform:none;}}'
     + '.cb-card{width:370px;border-radius:22px;overflow:hidden;background:linear-gradient(160deg,rgba(255,255,255,.82) 0%,rgba(235,244,255,.88) 100%);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);box-shadow:0 32px 80px rgba(0,0,0,0.16),0 6px 20px rgba(1,84,177,0.10),inset 0 1px 0 rgba(255,255,255,0.9);display:flex;flex-direction:column;max-height:calc(100vh - 160px);font-family:"Outfit",sans-serif;border:1px solid rgba(255,255,255,.6);box-sizing:border-box;}'
     + '.cb-card *{box-sizing:border-box;}'
@@ -197,7 +236,9 @@
     + '#lead-bot #cb-input-bar#cb-input-bar button#cb-send svg#cb-send-icon *{stroke:#ffffff!important;fill:none!important;opacity:1!important;visibility:visible!important;display:inline!important;}'
     + '.cb-schedule{display:none;text-align:center;background:linear-gradient(135deg,#F09300,#f5a623);color:#fff!important;font-weight:700;font-size:13.5px;font-family:"Outfit",sans-serif;text-decoration:none!important;padding:13px;letter-spacing:.2px;transition:filter .2s;flex-shrink:0;}'
     + '.cb-schedule:hover{filter:brightness(.92);}'
-    + '@media (max-width:480px){#lead-bot{bottom:0;right:0;left:0;width:100%;animation:none;}.cb-card{width:100%;border-radius:24px 24px 0 0;max-height:88vh;overflow:hidden;border:none;}.cb-body{max-height:42vh!important;}.cb-qbtns button,.cb-bbtns button{font-size:12px!important;padding:9px 10px!important;}.cb-input-bar input{font-size:13px;box-sizing:border-box;}#cb-greeting-bubble{right:8px;bottom:100px;max-width:calc(100vw - 80px);}#bot-launcher{bottom:16px;right:16px;width:60px;height:60px;}#bot-launcher img{width:54px;height:54px;}.cb-online-dot{bottom:2px;right:2px;width:12px;height:12px;}}';
+    + '#cb-backdrop{position:fixed;inset:0;background:rgba(10,20,40,0.45);z-index:2147483645;opacity:0;pointer-events:none;transition:opacity .25s ease;display:none;}'
+    + '#cb-backdrop.cb-backdrop-on{opacity:1;pointer-events:all;}'
+    + '@media (max-width:768px){#cb-backdrop{display:block;}#lead-bot{top:0;bottom:0;right:0;left:0;width:100%;height:100%;height:100dvh;animation:none;display:flex;align-items:stretch;justify-content:stretch;}.cb-card{width:100%;height:100%;max-height:100vh;max-height:100dvh;border-radius:0;overflow:hidden;border:none;}.cb-body{flex:1 1 auto!important;max-height:none!important;min-height:0!important;}.cb-qbtns button,.cb-bbtns button{font-size:13.5px!important;padding:11px 12px!important;min-height:48px!important;}.cb-input-bar{padding:12px!important;}.cb-input-bar input{font-size:15px;box-sizing:border-box;padding:12px 16px;}#cb-greeting-bubble{right:88px;bottom:16px;max-width:calc(100vw - 170px);}#cb-greeting-card{right:8px;left:8px;width:auto;bottom:16px;}#bot-launcher{bottom:16px;right:16px;width:60px;height:60px;z-index:2147483646;}#bot-launcher img{width:54px;height:54px;}.cb-online-dot{bottom:2px;right:2px;width:12px;height:12px;}.cb-launcher-badge{width:16px;height:16px;font-size:9px;border-width:1.5px;top:0;right:0;}}';
 
   function injectStyles() {
     if (!document.getElementById('cb-font-link')) {
@@ -215,6 +256,10 @@
 
   /* ── DOM BUILD ── */
   function buildDOM() {
+    var backdrop = document.createElement('div');
+    backdrop.id = 'cb-backdrop';
+    document.body.appendChild(backdrop);
+
     var launcher = document.createElement('div');
     launcher.id = 'bot-launcher';
     launcher.style.display = 'none';
@@ -262,7 +307,7 @@
         '</div>' +
         '<div id="cb-messages" class="cb-body cb-body-hidden">' +
           '<div style="display:flex!important;align-items:flex-end!important;gap:8px!important;max-width:88%!important;">' +
-            '<img src="' + AVATAR_URL + '" style="' + AV_STYLE + '" alt="" onerror="this.style.display=\'none\'" />' +
+            '<img src="' + AVATAR_URL + '" style="' + AV_STYLE + '" alt="" onerror="this.src=\'' + AVATAR_FB + '\'" />' +
             '<div class="cb-bot-msg" style="flex:1!important;">Hello! What kind of project do you need help bringing to life? &#x1F44B;</div>' +
           '</div>' +
           '<div id="cb-step1" class="cb-qbtns cb-grid">' +
@@ -301,6 +346,11 @@
      * instead of clicking a scripted button. */
     var chatHistory = [];
 
+    /* Guards against duplicate/concurrent AI calls (e.g. a double-click or
+     * double-tap on send firing handleInput twice before the first request
+     * resolves), which otherwise stacks near-identical AI replies. */
+    var aiRequestInFlight = false;
+
     /* Derive API endpoint from widget.js src — same origin as the widget */
     var API_URL = (function () {
       try {
@@ -313,11 +363,37 @@
 
     function scroll() { msgs.scrollTop = msgs.scrollHeight; }
 
+    /* Scrolls so the most recent bot question stays visible at the top of
+     * the panel instead of being pushed off-screen by its own button group
+     * (button rows can be taller than the remaining scroll viewport). */
+    function scrollToLatestBotMsg() {
+      var wraps = msgs.querySelectorAll('.cb-bot-msg-wrap');
+      var last = wraps[wraps.length - 1];
+      if (last) { msgs.scrollTop = last.offsetTop - 8; } else { scroll(); }
+    }
+
     function avImg() {
       return '<img src="' + AVATAR_URL + '" style="' + AV_STYLE + '" alt="" onerror="this.src=\'' + AVATAR_FB + '\'" />';
     }
 
+/* Removes the previous bot bubble if it has the exact same text, so a
+     * message firing twice (e.g. a race between the AI response and a
+     * reminder/auto-open) replaces the old one instead of stacking a
+     * duplicate. Reads the DOM directly so it also catches bubbles built
+     * by other code paths (like the idle reminder), not just addBotMsg. */
+    function dedupeLastBotMsg(html) {
+      var wraps = msgs.querySelectorAll('.cb-bot-msg-wrap');
+      var last = wraps[wraps.length - 1];
+      var lastBubble = last && last.querySelector('.cb-bot-msg');
+      if (lastBubble) {
+        var probe = document.createElement('div');
+        probe.innerHTML = html;
+        if (lastBubble.innerHTML === probe.innerHTML) last.remove();
+      }
+    }
+
     function addBotMsg(html) {
+      dedupeLastBotMsg(html);
       var w = document.createElement('div');
       w.className = 'cb-bot-msg-wrap';
       w.setAttribute('style', WRAP_STYLE);
@@ -326,11 +402,39 @@
     }
 
     function addUserMsg(text) {
+      cancelTeaserFlow();
       var d = document.createElement('div');
       d.setAttribute('style', USER_STYLE);
       d.className = 'cb-user-msg';
       d.textContent = text;
       msgs.appendChild(d); scroll();
+    }
+
+    /* Inserts the teaser greeting question + the user's Yes/No reply at the very
+     * top of the thread (before the static "Hello! What kind of project..."
+     * block), so the greeting card's question reads first when opened via Yes/No. */
+    function prependGreetingExchange(answer) {
+      /* The static "Hello! What kind of project..." + MCQ block is redundant
+       * once the teaser's own Yes/No question has already been answered —
+       * remove it so it doesn't sit between the greeting exchange and the
+       * follow-up reply. */
+      var staticIntro = msgs.firstChild;
+      if (staticIntro) staticIntro.remove();
+      var s1 = document.getElementById('cb-step1');
+      if (s1) s1.remove();
+
+      var q = document.createElement('div');
+      q.className = 'cb-bot-msg-wrap';
+      q.setAttribute('style', WRAP_STYLE);
+      q.innerHTML = avImg() + '<div class="cb-bot-msg" style="' + BOT_STYLE + '">Are you currently exploring custom software or app development for your business?</div>';
+      msgs.insertBefore(q, msgs.firstChild);
+
+      var a = document.createElement('div');
+      a.setAttribute('style', USER_STYLE);
+      a.className = 'cb-user-msg';
+      a.textContent = answer;
+      msgs.insertBefore(a, q.nextSibling);
+      scroll();
     }
 
     function showTyping() {
@@ -373,6 +477,8 @@
      * lead-state machine is left untouched — askAI only supplies the
      * conversational reply text; callers still drive step transitions. */
     function askAI(userText, silent, onDone) {
+      if (aiRequestInFlight) return;
+      aiRequestInFlight = true;
       if (!silent) {
         chatHistory.push({ role: 'user', content: userText });
       }
@@ -386,6 +492,7 @@
       })
       .then(function (r) { return r.json(); })
       .then(function (data) {
+        aiRequestInFlight = false;
         hideTyping();
         inputEl.disabled = false;
         var reply = data.reply || "I'm having a little trouble right now. Please try again or call us at 406-936-3049.";
@@ -396,12 +503,51 @@
         if (onDone) onDone(reply);
       })
       .catch(function () {
+        aiRequestInFlight = false;
         hideTyping();
         inputEl.disabled = false;
         addBotMsg("Sorry, I'm having trouble connecting right now. Please call us at 406-936-3049 or email contact@demskigroup.com.");
         resetIdleTimer();
         if (onDone) onDone(null);
       });
+    }
+
+    /* ── MCQ-FIRST FREE-TEXT CLASSIFIER ──
+     * The widget is MCQ-first: every scripted step shows its options as
+     * buttons. If a user types instead of tapping, we still try to keep
+     * them moving through the script rather than dropping into open AI
+     * chat — first via cheap local keyword matching, then (only if that's
+     * inconclusive) a single silent classification call to /api/chat that
+     * does NOT touch chatHistory or render as a visible bot message. */
+    function localKeywordMatch(text, options, keywordMap) {
+      var lower = text.toLowerCase();
+      for (var i = 0; i < options.length; i++) {
+        var opt = options[i];
+        var patterns = keywordMap[opt];
+        if (patterns && patterns.test(lower)) return opt;
+      }
+      return null;
+    }
+
+    function classifyFreeText(text, options, onMatch, onNoMatch) {
+      var prompt = 'The user was asked a question and given these exact options: ' +
+        options.map(function (o) { return '"' + o + '"'; }).join(', ') +
+        '. The user typed: "' + text + '". ' +
+        'Reply with ONLY the single option text that best matches their intent, copied exactly as given above. ' +
+        'If none of the options reasonably match, reply with exactly: NONE. Do not explain, do not add punctuation.';
+
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var reply = (data.reply || '').trim();
+          var matched = options.filter(function (o) { return o.toLowerCase() === reply.toLowerCase(); })[0];
+          if (matched) onMatch(matched); else onNoMatch();
+        })
+        .catch(function () { onNoMatch(); });
     }
 
     function showInputBar() {
@@ -425,37 +571,51 @@
 
     function scheduleIdleTimer() {
       clearTimeout(idleTimer);
-      if (step < 7) idleTimer = setTimeout(showIdleReminder, idleInterval);
+      if (step < 8) idleTimer = setTimeout(showIdleReminder, idleInterval);
     }
 
     function resetIdleTimer() {
       clearTimeout(idleTimer);
-      idleInterval = 60000;
+      idleInterval = 40000;
       removeIdleReminder();
       awaitingIdleResponse = false;
       scheduleIdleTimer();
     }
 
     function showIdleReminder() {
-      if (step >= 7 || awaitingIdleResponse) return;
+      if (step >= 8 || awaitingIdleResponse) return;
       awaitingIdleResponse = true;
-      idleInterval = Math.min(idleInterval * 2, 960000);
-      var win = document.getElementById('lead-bot');
-      if (win && win.style.display === 'none') {
+      idleInterval += 40000;
+
+      /* Badge + shake + sound on the launcher only make sense while the
+       * chat window is closed — skip them while the user has it open. */
+      var leadBotEl = document.getElementById('lead-bot');
+      var chatIsOpen = leadBotEl && leadBotEl.style.display === 'block';
+      if (!chatIsOpen) {
         document.getElementById('cb-launcher-badge').classList.add('cb-badge-on');
+        var idleLauncher = document.getElementById('bot-launcher');
+        if (idleLauncher) {
+          idleLauncher.classList.remove('cb-shake');
+          void idleLauncher.offsetWidth;
+          idleLauncher.classList.add('cb-shake');
+          setTimeout(function () { idleLauncher.classList.remove('cb-shake'); }, 2000);
+        }
         playNotification();
-        idleTimer = setTimeout(showIdleReminder, idleInterval);
-      } else {
-        removeIdleReminder();
-        hideInputBar();
-        var wrap = document.createElement('div');
-        wrap.id = IDLE_MSG_ID;
-        wrap.className = 'cb-bot-msg-wrap';
-        wrap.setAttribute('style', WRAP_STYLE);
-        wrap.innerHTML = avImg() + '<div class="cb-bot-msg" style="' + BOT_STYLE + '">Hi, are you still there? &#x1F44B;</div>';
-        msgs.appendChild(wrap); scroll();
-        showIdleButtons();
       }
+
+      removeIdleReminder();
+      hideInputBar();
+      var idleMsg = 'Hi, are you still there? &#x1F44B;';
+      dedupeLastBotMsg(idleMsg);
+      var wrap = document.createElement('div');
+      wrap.id = IDLE_MSG_ID;
+      wrap.className = 'cb-bot-msg-wrap';
+      wrap.setAttribute('style', WRAP_STYLE);
+      wrap.innerHTML = avImg() + '<div class="cb-bot-msg" style="' + BOT_STYLE + '">' + idleMsg + '</div>';
+      msgs.appendChild(wrap); scroll();
+      showIdleButtons();
+      awaitingIdleResponse = false;
+      idleTimer = setTimeout(showIdleReminder, idleInterval);
     }
 
     function showIdleButtons() {
@@ -470,18 +630,20 @@
         awaitingIdleResponse = false; clearTimeout(idleTimer);
         botReply('No problem! Feel free to come back anytime. &#x1F603;');
       };
-      div.appendChild(yes); div.appendChild(no); msgs.appendChild(div); scroll();
+      div.appendChild(yes); div.appendChild(no); msgs.appendChild(div); scrollToLatestBotMsg();
     }
 
     function resumeStep() {
       awaitingIdleResponse = false; resetIdleTimer();
+      showInputBar();
       if (step === 1) { botReply('No problem! What type of project is it?', function () { showIntentOptions(lead.intent); }); return; }
-      if (step === 2) { showProjectDescStep(); return; }
+      if (step === 2) { showTimelineStep(); return; }
       if (step === 3) { showBudgetStep(); return; }
-      if (step === 4) { showInputBar(); botReply("What's your name?"); return; }
-      if (step === 5) { showInputBar(); botReply("What's the best phone number to reach you?"); return; }
-      if (step === 6) { showInputBar(); botReply("What's the best email to reach you?"); return; }
-      if (step === 7) { botReply('Our team already has your details and will be in touch shortly!'); return; }
+      if (step === 4) { showNotesStep(); return; }
+      if (step === 5) { botReply("What's your name?"); return; }
+      if (step === 6) { botReply("What's the best phone number to reach you?"); return; }
+      if (step === 7) { botReply("What's the best email to reach you?"); return; }
+      if (step === 8) { botReply('Our team already has your details and will be in touch shortly!'); return; }
       botReply('No problem! Take your time.');
     }
 
@@ -492,35 +654,188 @@
       document.getElementById('cb-top-section').style.display = 'block';
     }
 
-    /* ── GREETING BUBBLE ── */
+    /* ── GREETING CARD (big, shown first) ── */
+    function showGreetingCard() {
+      if (expanded || teaserFlowDone || document.getElementById('cb-greeting-card')) return;
+      var c = document.createElement('div'); c.id = 'cb-greeting-card';
+      c.innerHTML =
+        '<div class="cb-gc-head">' +
+          '<div class="cb-gc-av-wrap">' +
+            '<img src="' + AVATAR_URL + '" alt="' + BOT_NAME + '" onerror="this.src=\'' + AVATAR_FB + '\'" />' +
+            '<span class="cb-gc-online"></span>' +
+          '</div>' +
+          '<div><div class="cb-gc-name">' + BOT_NAME + '</div><div class="cb-gc-time">Just now</div></div>' +
+          '<span class="cb-gc-close" id="cb-gc-close">&#x00D7;</span>' +
+        '</div>' +
+        '<p class="cb-gc-question">Are you currently exploring custom software or app development for your business?</p>' +
+        '<div class="cb-gc-yn">' +
+          '<button id="cb-gc-yes">Yes</button>' +
+          '<button id="cb-gc-no">No</button>' +
+        '</div>' +
+        '<div class="cb-gc-input">' +
+          '<input type="text" id="cb-gc-input-el" placeholder="Ask a question" autocomplete="off" />' +
+          '<button id="cb-gc-send" aria-label="Send">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>' +
+          '</button>' +
+        '</div>';
+      document.body.appendChild(c);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { c.classList.add('cb-gv'); });
+      });
+      document.getElementById('cb-gc-close').onclick = function () {
+        if (cardTimer) { clearTimeout(cardTimer); cardTimer = null; }
+        dismissGreetingCard();
+        showGreetingBubble();
+      };
+      document.getElementById('cb-gc-yes').onclick   = function () { openFromTeaser('Yes'); };
+      document.getElementById('cb-gc-no').onclick    = function () { openFromTeaser('No'); };
+      document.getElementById('cb-gc-send').onclick  = sendFromGreetingCard;
+      document.getElementById('cb-gc-input-el').onkeydown = function (e) {
+        if (e.key === 'Enter') sendFromGreetingCard();
+      };
+      /* No interaction on the card → hide it and move to the small teaser bubble. */
+      cardTimer = setTimeout(function () {
+        dismissGreetingCard();
+        showGreetingBubble();
+      }, 10000);
+    }
+
+    function sendFromGreetingCard() {
+      cancelTeaserFlow();
+      var inp = document.getElementById('cb-gc-input-el');
+      var val = inp && inp.value.trim();
+      openFromTeaser(val || null);
+    }
+
+    function dismissGreetingCard() {
+      if (cardTimer) { clearTimeout(cardTimer); cardTimer = null; }
+      var c = document.getElementById('cb-greeting-card'); if (!c) return;
+      c.classList.remove('cb-gv'); c.classList.add('cb-gh');
+      setTimeout(function () { if (c.parentNode) c.remove(); }, 400);
+    }
+
+    /* ── GREETING BUBBLE (small, shown after the card) ── */
     function showGreetingBubble() {
-      if (document.getElementById('cb-greeting-bubble')) return;
+      if (expanded || teaserFlowDone || document.getElementById('cb-greeting-bubble')) return;
       var b = document.createElement('div'); b.id = 'cb-greeting-bubble';
       b.innerHTML =
-        '<span class="cb-bubble-close" id="cb-bclose">&#x00D7;</span>' +
-        '<p>Hi! Need help with software or app development?</p>' +
-        '<button id="cb-bopen">Let\'s Chat!</button>';
+        '<p id="cb-bopen">Hey! Do you have any questions? &#x1F44B;</p>' +
+        '<img class="cb-bubble-av" src="' + AVATAR_URL + '" alt="' + BOT_NAME + '" onerror="this.src=\'' + AVATAR_FB + '\'" />' +
+        '<span class="cb-bubble-close" id="cb-bclose">&#x00D7;</span>';
       document.body.appendChild(b);
       requestAnimationFrame(function () {
         requestAnimationFrame(function () { b.classList.add('cb-bv'); });
       });
-      setTimeout(dismissBubble, 8000);
-      document.getElementById('cb-bclose').onclick = dismissBubble;
-      document.getElementById('cb-bopen').onclick  = openFromBubble;
+      document.getElementById('cb-bclose').onclick = function () { cancelTeaserFlow(); dismissBubble(); };
+      document.getElementById('cb-bopen').onclick   = function () { cancelTeaserFlow(); openFromTeaser(null); };
+      /* No interaction on the bubble for 40s → show the red badge. */
+      bubbleTimer = setTimeout(showLauncherBadge, 40000);
     }
 
     function dismissBubble() {
+      if (bubbleTimer) { clearTimeout(bubbleTimer); bubbleTimer = null; }
       var b = document.getElementById('cb-greeting-bubble'); if (!b) return;
       b.classList.remove('cb-bv'); b.classList.add('cb-bh');
       setTimeout(function () { if (b.parentNode) b.remove(); }, 400);
     }
 
-    function openFromBubble() {
+    /* No interaction on the bubble for 40s → red badge on the launcher avatar. */
+    function showLauncherBadge() {
+      if (expanded || teaserFlowDone) return;
+      var badge = document.getElementById('cb-launcher-badge');
+      if (badge) badge.classList.add('cb-badge-on');
+      playNotification();
+      var launcher = document.getElementById('bot-launcher');
+      if (launcher) {
+        launcher.classList.remove('cb-shake');
+        void launcher.offsetWidth; /* restart animation if it ran before */
+        launcher.classList.add('cb-shake');
+        setTimeout(function () { launcher.classList.remove('cb-shake'); }, 2000);
+      }
+      /* Still no interaction for another 10s → auto-open with the nudge message. */
+      badgeTimer = setTimeout(autoOpenWithNudge, 10000);
+    }
+
+    /* Auto-open after the badge has been ignored for 10s. Skips the normal
+     * welcome flow entirely and goes straight to the "still there?" nudge. */
+    function autoOpenWithNudge() {
+      if (expanded || teaserFlowDone) return;
+      teaserFlowDone = true;
+      dismissGreetingCard();
+      dismissBubble();
+      var badge = document.getElementById('cb-launcher-badge');
+      if (badge) badge.classList.remove('cb-badge-on');
+      setTimeout(function () {
+        expanded = true;
+        document.getElementById('lead-bot').style.display = 'block';
+        setLauncherVisible(true);
+        setBackdropVisible(true);
+        document.getElementById('cb-welcome').style.display = 'none';
+        msgs.classList.remove('cb-body-hidden');
+        showScheduleBar();
+        resetIdleTimer();
+        msgs.innerHTML = '';
+        hideInputBar();
+        addBotMsg('Hi, are you still there? &#x1F44B;');
+        showIdleButtons();
+      }, 200);
+    }
+
+    /* Cancels every pending teaser timer/auto-open. Called on any user
+     * interaction (Yes/No, launcher, bubble, close button, or message). */
+    function cancelTeaserFlow() {
+      teaserFlowDone = true;
+      if (cardTimer)  { clearTimeout(cardTimer);  cardTimer  = null; }
+      if (bubbleTimer) { clearTimeout(bubbleTimer); bubbleTimer = null; }
+      if (badgeTimer)  { clearTimeout(badgeTimer);  badgeTimer  = null; }
+      var badge = document.getElementById('cb-launcher-badge');
+      if (badge) badge.classList.remove('cb-badge-on');
+    }
+
+    function openFromTeaser(prefillText) {
+      cancelTeaserFlow();
+      dismissGreetingCard();
       dismissBubble();
       setTimeout(function () {
         document.getElementById('lead-bot').style.display = 'block';
+        setLauncherVisible(true);
+        setBackdropVisible(true);
         startChat();
+        if (prefillText === 'No' || prefillText) {
+          setTimeout(function () {
+            cancelTeaserFlow();
+            prependGreetingExchange(prefillText);
+            if (prefillText === 'No') { showNoFollowUp(); } else { askAI(prefillText, false); }
+          }, 500);
+        }
       }, 200);
+    }
+
+    /* ── "NO" FOLLOW-UP (hardcoded persuasive nudge + quick replies) ── */
+    function showNoFollowUp() {
+      chatHistory.push({ role: 'user', content: 'No' });
+      var msg = "Even if you're not actively looking, understanding what's possible can spark ideas. Many of our 250+ clients didn't realize how much custom software could transform their business. What's one thing in your business that feels harder than it should be?";
+      addBotMsg(msg);
+      chatHistory.push({ role: 'assistant', content: msg });
+      resetIdleTimer();
+      var div = document.createElement('div');
+      div.className = 'cb-qbtns cb-grid'; div.id = 'cb-no-followup';
+      var opts = ['Managing data', 'Customer interactions', 'Team coordination', 'Nothing really'];
+      div.innerHTML = opts.map(function (o) {
+        return '<button data-nofollow="' + o + '">' + o + '</button>';
+      }).join('');
+      msgs.appendChild(div); scrollToLatestBotMsg();
+      var btns = div.querySelectorAll('[data-nofollow]');
+      for (var i = 0; i < btns.length; i++) {
+        (function (btn) {
+          btn.onclick = function () {
+            var val = btn.getAttribute('data-nofollow');
+            div.remove();
+            addUserMsg(val);
+            askAI(val, false);
+          };
+        })(btns[i]);
+      }
     }
 
     /* ── START CHAT ── */
@@ -532,28 +847,41 @@
       resetIdleTimer();
     }
 
+    function setLauncherVisible(visible) {
+      var launcher = document.getElementById('bot-launcher');
+      if (launcher) launcher.style.display = visible ? 'flex' : 'none';
+    }
+
+    /* Dims the page behind the chat on mobile/tablet (<=768px), where the
+     * chat itself goes near-full-screen — no-op visually on desktop since
+     * #cb-backdrop only renders via that media query. Clicking it closes
+     * the chat, matching standard full-screen-modal mobile UX. */
+    function setBackdropVisible(visible) {
+      var backdrop = document.getElementById('cb-backdrop');
+      if (backdrop) backdrop.classList.toggle('cb-backdrop-on', visible);
+    }
+
     /* ── TOGGLE BOT ── */
     function toggleBot() {
-      var win   = document.getElementById('lead-bot');
-      var badge = document.getElementById('cb-launcher-badge');
+      var win = document.getElementById('lead-bot');
       var isOpen = (win.style.display === 'none' || win.style.display === '');
       win.style.display = isOpen ? 'block' : 'none';
+      setLauncherVisible(true);
+      setBackdropVisible(isOpen);
       if (isOpen) {
+        cancelTeaserFlow();
+        dismissGreetingCard();
         dismissBubble();
-        var hadBadge = badge.classList.contains('cb-badge-on');
-        badge.classList.remove('cb-badge-on');
-        setTimeout(function () {
-          startChat();
-          if (hadBadge) showIdleReminder();
-        }, 400);
+        setTimeout(function () { startChat(); }, 400);
       }
     }
 
     /* ── STEP 1: Intent ── */
-    function step1Handler(val) {
+    function step1Handler(val, skipUserMsg) {
       expandUI();
       var s1 = document.getElementById('cb-step1'); if (s1) s1.remove();
-      addUserMsg(val); lead.intent = val; step = 1; resetIdleTimer();
+      if (!skipUserMsg) addUserMsg(val);
+      lead.intent = val; step = 1; resetIdleTimer();
       var followUp = {
         'New startup or app idea':  'Love it! Tell me more, what kind of app or product are you thinking about?',
         'Software for my business': 'Great! What problem are you trying to solve in your business?',
@@ -567,13 +895,8 @@
 
     /* ── INTENT OPTIONS ── */
     function showIntentOptions(intent) {
-      var intentOptions = {
-        'New startup or app idea':   ['Mobile App', 'Web App', 'SaaS Platform', 'eCommerce', 'Other'],
-        'Software for my business':  ['Automate Workflows', 'Customer Management', 'Reporting & Analytics', 'Employee Tools', 'Other'],
-        'Digital marketing help':    ['Increase Website Traffic', 'Generate More Leads', 'Social Media Growth', 'Paid Advertising', 'Other'],
-        'Just exploring':            ['Planning a Future Project', 'Comparing Vendors', 'Learning About Tech', 'Just Curious']
-      };
-      var opts = intentOptions[intent] || ['Mobile App', 'Web App', 'Something else'];
+      var opts = INTENT_OPTIONS[intent] || ['Mobile App', 'Web App', 'Something else'];
+      var oldIntent = document.getElementById('cb-intent'); if (oldIntent) oldIntent.remove();
       var div = document.createElement('div'); div.className = 'cb-qbtns cb-grid'; div.id = 'cb-intent';
       opts.forEach(function (o) {
         var b = document.createElement('button'); b.textContent = o;
@@ -581,7 +904,7 @@
           var el = document.getElementById('cb-intent'); if (el) el.remove();
           addUserMsg(o); lead.intent_detail = o;
           step = 2;
-          showProjectDescStep();
+          showTimelineStep();
         };
         div.appendChild(b);
       });
@@ -594,51 +917,95 @@
             var b = document.createElement('button'); b.textContent = v;
             b.onclick = function () { step1Handler(v); }; s1.appendChild(b);
           });
-          msgs.appendChild(s1); scroll();
+          msgs.appendChild(s1); scrollToLatestBotMsg();
         });
       }));
-      msgs.appendChild(div); scroll();
+      msgs.appendChild(div); scrollToLatestBotMsg();
     }
 
-    /* ── PROJECT DESCRIPTION (free text) ── */
-    function showProjectDescStep() {
+    /* ── TIMELINE ── */
+    function showTimelineStep() {
       step = 2; resetIdleTimer();
-      botReply("Can you tell me a bit about your project? Feel free to share as much or as little as you'd like. Any details help!", function () {
+      botReply('When would you like to go live?', function () {
         showInputBar();
-        inputEl.placeholder = 'Describe your project...';
+        inputEl.placeholder = 'Type your answer...';
+        var oldTimeline = document.getElementById('cb-timeline'); if (oldTimeline) oldTimeline.remove();
+        var div = document.createElement('div'); div.className = 'cb-qbtns cb-grid'; div.id = 'cb-timeline';
+        ['ASAP', '1-3 months', '3-6 months', '6+ months', 'Not sure yet'].forEach(function (tv) {
+          var btn = document.createElement('button'); btn.textContent = tv;
+          btn.onclick = function () {
+            var el = document.getElementById('cb-timeline'); if (el) el.remove();
+            addUserMsg(tv); lead.timeline = tv;
+            showBudgetStep();
+          };
+          div.appendChild(btn);
+        });
+        div.appendChild(makeBackBtn('Back', function () {
+          var el = document.getElementById('cb-timeline'); if (el) el.remove();
+          lead.timeline = ''; step = 1; showIntentOptions(lead.intent);
+        }));
+        msgs.appendChild(div); scrollToLatestBotMsg();
       });
     }
 
     /* ── BUDGET ── */
     function showBudgetStep() {
       step = 3; resetIdleTimer();
-      hideInputBar();
       botReply('Do you have a budget range in mind for this project?', function () {
+        showInputBar();
+        inputEl.placeholder = 'Type your answer...';
+        var oldBudget = document.getElementById('cb-budget'); if (oldBudget) oldBudget.remove();
         var div = document.createElement('div'); div.className = 'cb-bbtns cb-grid'; div.id = 'cb-budget';
         ['Under $10k', '$10k - $25k', '$25k - $50k', '$50k+', 'Not sure yet'].forEach(function (bv) {
           var btn = document.createElement('button'); btn.textContent = bv;
           btn.onclick = function () {
             var el = document.getElementById('cb-budget'); if (el) el.remove();
             addUserMsg(bv); lead.budget = bv;
-            step = 4; resetIdleTimer();
-            showInputBar();
-            inputEl.placeholder = 'Type your answer...';
-            setTimeout(function () { inputEl.focus(); }, 50);
-            botReply("Thanks, this helps a lot! Let me grab your details so our team can reach out.<br><br>What's your name?");
+            showNotesStep();
           };
           div.appendChild(btn);
         });
         div.appendChild(makeBackBtn('Back', function () {
           var el = document.getElementById('cb-budget'); if (el) el.remove();
-          lead.budget = ''; step = 2; showProjectDescStep();
+          lead.budget = ''; step = 2; showTimelineStep();
         }));
-        msgs.appendChild(div); scroll();
+        msgs.appendChild(div); scrollToLatestBotMsg();
       });
+    }
+
+    /* ── OPTIONAL NOTES (free text, skippable) ── */
+    function showNotesStep() {
+      step = 4; resetIdleTimer();
+      hideInputBar();
+      botReply("Anything else you'd like us to know about your project?", function () {
+        showInputBar();
+        inputEl.placeholder = 'Type here, or tap Skip...';
+        setTimeout(function () { inputEl.focus(); }, 50);
+        var oldSkip = document.getElementById('cb-notes-skip'); if (oldSkip) oldSkip.remove();
+        var div = document.createElement('div'); div.className = 'cb-qbtns cb-grid'; div.id = 'cb-notes-skip';
+        div.style.setProperty('grid-template-columns', '1fr', 'important');
+        var skip = document.createElement('button'); skip.textContent = 'Skip';
+        skip.onclick = function () {
+          var el = document.getElementById('cb-notes-skip'); if (el) el.remove();
+          addUserMsg('Skip');
+          goToContactStep();
+        };
+        div.appendChild(skip);
+        msgs.appendChild(div); scrollToLatestBotMsg();
+      });
+    }
+
+    function goToContactStep() {
+      step = 5; resetIdleTimer();
+      showInputBar();
+      inputEl.placeholder = 'Type your answer...';
+      setTimeout(function () { inputEl.focus(); }, 50);
+      botReply("Thanks, this helps a lot! Let me grab your details so our team can reach out.<br><br>What's your name?");
     }
 
     /* ── FINAL CTA ── */
     function showFinalCTA() {
-      step = 7; clearTimeout(idleTimer);
+      step = 8; clearTimeout(idleTimer);
       hideInputBar();
       botReply("Awesome! Based on what you've shared, the best next step is a quick call or Google Meet to go over your project!", function () {
         var div = document.createElement('div'); div.className = 'cb-cta-btns'; div.id = 'cb-cta';
@@ -646,7 +1013,7 @@
         book.onclick = function () { handleCTA('Book a Google Meet'); window.open(CALENDLY_URL, '_blank'); };
         var em = document.createElement('button'); em.className = 'cb-cta-secondary'; em.textContent = 'Send me info by email';
         em.onclick = function () { handleCTA('Send me info by email'); };
-        div.appendChild(book); div.appendChild(em); msgs.appendChild(div); scroll();
+        div.appendChild(book); div.appendChild(em); msgs.appendChild(div); scrollToLatestBotMsg();
       }, 1200);
     }
 
@@ -663,25 +1030,39 @@
     }
 
     /* ── SUBMIT ── */
+    var LEAD_URL = (function () {
+      try {
+        var base = new URL(SCRIPT_EL.src, location.href).href.replace(/\/[^/]*$/, '/');
+        return base + 'api/send-lead';
+      } catch (e) {
+        return '/api/send-lead';
+      }
+    })();
+
     function submitLead() {
       var p = {
         intent: lead.intent, intent_detail: lead.intent_detail,
-        project_description: lead.project_description,
+        timeline: lead.timeline,
         budget: lead.budget,
+        project_notes: lead.project_notes,
         name: lead.name, phone: lead.phone, email: lead.email, cta_choice: lead.cta_choice,
         page: lead.page, page_name: lead.page_name,
         utm_source: lead.utm_source, utm_campaign: lead.utm_campaign,
         utm_medium: lead.utm_medium, utm_term: lead.utm_term,
         utm_content: lead.utm_content, gclid: lead.gclid
       };
-      if (!window.emailjs) { console.warn('[Demski Chatbot] EmailJS not loaded; lead not sent', p); return; }
-      window.emailjs.send(EJS_SVC, EJS_LEAD_TPL, p).catch(function (e) { console.warn('Lead failed', e); });
-      window.emailjs.send(EJS_SVC, EJS_CONF_TPL, { user_name: lead.name, user_email: lead.email, cta_choice: lead.cta_choice }).catch(function (e) { console.warn('Confirm failed', e); });
+      fetch(LEAD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(p)
+      }).catch(function (e) { console.warn('[Demski Chatbot] Lead send failed', e); });
     }
 
     /* ── INPUT HANDLER ── */
     function handleInput() {
+      if (aiRequestInFlight) return;
       var val = inputEl.value.trim(); if (!val) return;
+      cancelTeaserFlow();
       if (awaitingIdleResponse) {
         removeIdleReminder(); addUserMsg(val); inputEl.value = ''; resumeStep(); return;
       }
@@ -694,7 +1075,7 @@
         if (/startup|app idea|new product|mvp|launch/.test(lower)) intentGuess = 'New startup or app idea';
         else if (/business|company|software|workflow|automate/.test(lower)) intentGuess = 'Software for my business';
         else if (/market|seo|ads|traffic|social|leads/.test(lower)) intentGuess = 'Digital marketing help';
-        if (intentGuess) { step1Handler(intentGuess); return; }
+        if (intentGuess) { step1Handler(intentGuess, true); return; }
         /* No clear intent match — let the AI carry the conversation instead
          * of forcing the button list again. */
         askAI(val, false, function () {
@@ -703,33 +1084,97 @@
             var b = document.createElement('button'); b.textContent = v;
             b.onclick = function () { step1Handler(v); }; s1.appendChild(b);
           });
-          msgs.appendChild(s1); scroll();
+          msgs.appendChild(s1); scrollToLatestBotMsg();
         });
         return;
       }
 
+      /* Steps 1-3 are MCQ-first: a typed answer first tries to match one of
+       * the step's own options (local keywords, then a silent AI classify
+       * call) so the flow still advances like a tap would. Only when
+       * nothing matches do we ask for clarification and re-show buttons. */
       if (step === 1) {
         var el = document.getElementById('cb-intent'); if (el) el.remove();
-        /* User typed instead of picking an intent-detail button — ask the AI
-         * to respond conversationally, then re-show the button options. */
-        askAI(val, false, function () { showIntentOptions(lead.intent); });
+        var intentDetailOpts = INTENT_OPTIONS[lead.intent] || ['Mobile App', 'Web App', 'Something else'];
+        var intentDetailKw = {
+          'Mobile App': /mobile|ios|android|app\b/,
+          'Web App': /web app|website app|web-based/,
+          'SaaS Platform': /saas|subscription|platform/,
+          'eCommerce': /ecommerce|e-commerce|shop|store|sell online/,
+          'Automate Workflows': /automat|workflow/,
+          'Customer Management': /crm|customer management|client management/,
+          'Reporting & Analytics': /report|analytic|dashboard/,
+          'Employee Tools': /employee|staff|hr tool/,
+          'Increase Website Traffic': /traffic/,
+          'Generate More Leads': /lead/,
+          'Social Media Growth': /social media|social growth/,
+          'Paid Advertising': /ads|advertis|ppc/,
+          'Planning a Future Project': /planning|future/,
+          'Comparing Vendors': /compar|vendor|shopping around/,
+          'Learning About Tech': /learn|research/,
+          'Just Curious': /curious|just looking/
+        };
+        var localMatch1 = localKeywordMatch(val, intentDetailOpts, intentDetailKw);
+        if (localMatch1) { lead.intent_detail = localMatch1; step = 2; showTimelineStep(); return; }
+        classifyFreeText(val, intentDetailOpts, function (matched) {
+          lead.intent_detail = matched; step = 2; showTimelineStep();
+        }, function () {
+          botReply("Just to make sure I capture this right, which of these fits best?", function () { showIntentOptions(lead.intent); });
+        });
         return;
       }
 
-      /* Step 2: project description free text — let the AI respond
-       * conversationally to what they typed, then continue the scripted
-       * flow into the budget step. */
       if (step === 2) {
-        lead.project_description = val;
-        inputEl.placeholder = 'Type your answer...';
-        askAI(val, false, function () { showBudgetStep(); });
+        var elT = document.getElementById('cb-timeline'); if (elT) elT.remove();
+        var timelineOpts = ['ASAP', '1-3 months', '3-6 months', '6+ months', 'Not sure yet'];
+        var timelineKw = {
+          'ASAP': /asap|right away|immediately|urgent|now\b/,
+          '1-3 months': /1-3|1 to 3|one to three|next (month|quarter)|few months/,
+          '3-6 months': /3-6|3 to 6|three to six/,
+          '6+ months': /6\+|6 months|six months|later this year|next year/,
+          'Not sure yet': /not sure|no idea|don't know|undecided|flexible/
+        };
+        var localMatch2 = localKeywordMatch(val, timelineOpts, timelineKw);
+        if (localMatch2) { lead.timeline = localMatch2; showBudgetStep(); return; }
+        classifyFreeText(val, timelineOpts, function (matched) {
+          lead.timeline = matched; showBudgetStep();
+        }, function () {
+          botReply("Just to make sure I capture this right, which of these fits best?", function () { showTimelineStep(); });
+        });
         return;
       }
 
-      if (step === 3) { showBudgetStep(); return; }
+      if (step === 3) {
+        var elB = document.getElementById('cb-budget'); if (elB) elB.remove();
+        var budgetOpts = ['Under $10k', '$10k - $25k', '$25k - $50k', '$50k+', 'Not sure yet'];
+        var budgetKw = {
+          'Under $10k': /under.?10|less than.?10|below.?10/,
+          '$10k - $25k': /10.?(k|000).{0,5}25|between 10 and 25/,
+          '$25k - $50k': /25.?(k|000).{0,5}50|between 25 and 50/,
+          '$50k+': /50.?(k|000)\+|over.?50|more than.?50|above.?50/,
+          'Not sure yet': /not sure|no idea|don't know|undecided|flexible/
+        };
+        var localMatch3 = localKeywordMatch(val, budgetOpts, budgetKw);
+        if (localMatch3) { lead.budget = localMatch3; showNotesStep(); return; }
+        classifyFreeText(val, budgetOpts, function (matched) {
+          lead.budget = matched; showNotesStep();
+        }, function () {
+          botReply("Just to make sure I capture this right, which of these fits best?", function () { showBudgetStep(); });
+        });
+        return;
+      }
 
-      if ((step === 4 || step === 5 || step === 6) && isOffTopic(val)) {
-        var q = step === 4 ? "What's your name?" : step === 5 ? "What's your phone number?" : "What's your email address?";
+      /* Step 4: optional notes free text — save it, then move straight into
+       * contact info collection (the Skip button covers the empty case). */
+      if (step === 4) {
+        var elS = document.getElementById('cb-notes-skip'); if (elS) elS.remove();
+        lead.project_notes = val;
+        goToContactStep();
+        return;
+      }
+
+      if ((step === 5 || step === 6 || step === 7) && isOffTopic(val)) {
+        var q = step === 5 ? "What's your name?" : step === 6 ? "What's your phone number?" : "What's your email address?";
         /* Off-topic question during lead capture — answer via AI, then
          * steer back to the field we still need. */
         askAI(val, false, function (reply) {
@@ -738,18 +1183,18 @@
         });
         return;
       }
-      if (step === 4) {
+      if (step === 5) {
         if (val.length < 2 || /^\d+$/.test(val)) { botReply('Could you enter your full name please?'); return; }
-        lead.name = val; step = 5;
+        lead.name = val; step = 6;
         botReply('Nice to meet you, ' + val + '! What\'s the best phone number to reach you?'); return;
       }
-      if (step === 5) {
+      if (step === 6) {
         var digits = val.replace(/\D/g, '');
         if (digits.length < 7) { botReply("That doesn't look like a valid phone number. Could you double-check?"); return; }
-        lead.phone = val; step = 6;
+        lead.phone = val; step = 7;
         botReply("Got it! And what's the best email address to reach you?"); return;
       }
-      if (step === 6) {
+      if (step === 7) {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { botReply("That doesn't look right. Could you double-check your email address?"); return; }
         lead.email = val; showFinalCTA(); return;
       }
@@ -759,6 +1204,7 @@
     document.getElementById('cb-close-compact').onclick  = toggleBot;
     document.getElementById('cb-close-expanded').onclick = toggleBot;
     document.getElementById('bot-launcher').onclick      = toggleBot;
+    document.getElementById('cb-backdrop').onclick       = toggleBot;
     document.getElementById('cb-send').onclick           = handleInput;
     inputEl.addEventListener('keypress', function (e) { if (e.key === 'Enter') handleInput(); });
 
@@ -769,23 +1215,14 @@
       })(s1btns[i]);
     }
 
-    /* ── EMAILJS + LAUNCH ── */
-    function bootEmailJS() {
-      if (window.emailjs) { window.emailjs.init(EJS_KEY); return; }
-      var s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
-      s.onload = function () { window.emailjs.init(EJS_KEY); };
-      document.head.appendChild(s);
-    }
-
+    /* ── LAUNCH ── */
     function launch() {
-      bootEmailJS();
       var launcher = document.getElementById('bot-launcher');
       launcher.style.display = 'flex';
+      setTimeout(function () { if (!expanded) showGreetingCard(); }, 800);
       setTimeout(function () {
         launcher.classList.add('cb-launcher-visible');
-        setTimeout(function () { if (!expanded) showGreetingBubble(); }, 1000);
-      }, 800);
+      }, 1800);
     }
 
     // Use DOMContentLoaded so the launcher appears fast (~1.5s total),
