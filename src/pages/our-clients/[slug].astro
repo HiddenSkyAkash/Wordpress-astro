@@ -244,6 +244,15 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
       .cs-other-inner { padding: 24px 20px 50px; }
       .cs-other-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     }
+    /* Phones: a 2-col card grid overflows (card min-content > half the width),
+       so stack to a single column and let the featured card go full-width. */
+    @media (max-width: 600px) {
+      .cs-other-inner { padding: 22px 16px 44px; }
+      .cs-other-grid { grid-template-columns: 1fr; grid-auto-rows: auto; gap: 14px; }
+      .cs-other-card { min-height: 150px; }
+      .cs-other-card--featured { grid-column: auto; grid-row: auto; min-height: 300px; }
+      .cs-other-card-link { white-space: normal; }
+    }
 
     @media (max-width: 900px) {
       .cs-hero { padding: 32px 20px 24px; }
@@ -255,8 +264,10 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
       .cs-body-wrap { grid-template-columns: 1fr; padding: 32px 20px 60px; gap: 28px; }
       .cs-sidebar { position: static; flex-direction: column; gap: 0; }
       .cs-sb-group { width: 100%; }
-      .cs-section p, .cs-feature p { font-size: 16px; }
-      .cs-section h2 { font-size: 26px; }
+      .cs-content p, .cs-section p, .cs-feature p { font-size: 16px; }
+      .cs-content h2, .cs-section h2 { font-size: 26px; margin: 36px 0 12px !important; }
+      .cs-content img { margin: 16px auto !important; }
+      .cs-content blockquote::before { font-size: 40px; }
       .cs-stats-row { flex-direction: column; }
       .cs-cta-inner { flex-direction: column; min-height: 0; }
       .cs-cta-text { flex: none; padding: 36px 24px 30px; }
@@ -578,6 +589,89 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
       }
     }
 
+    /* Mobile: the CTA buttons are styled orange only inside the desktop media
+       block above, so on phones they fall back to the grey pill — re-apply the
+       orange site button on mobile too. */
+    @media (max-width: 900px) {
+      .cs-willo .cs-content .elementor-element-67fd5fb a.elementor-button,
+      .cs-willo .cs-content .elementor-element-f8ea4ab a.elementor-button,
+      .cs-shop-orthopedics .cs-content .elementor-element-67fd5fb a.elementor-button,
+      .cs-shop-orthopedics .cs-content .elementor-element-2a3f537 a.elementor-button,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-67fd5fb a.elementor-button,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-2a3f537 a.elementor-button {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        background: #F09300; color: #fff; text-decoration: none; border: none;
+        font-size: 16px; font-weight: 600; font-family: 'Outfit', sans-serif;
+        padding: 13px 26px; border-radius: 8px; margin: 0 10px 10px 0;
+      }
+      .cs-willo .cs-content .elementor-element-67fd5fb a[href^="tel:"].elementor-button::before,
+      .cs-willo .cs-content .elementor-element-f8ea4ab a[href^="tel:"].elementor-button::before,
+      .cs-shop-orthopedics .cs-content .elementor-element-67fd5fb a[href^="tel:"].elementor-button::before,
+      .cs-shop-orthopedics .cs-content .elementor-element-2a3f537 a[href^="tel:"].elementor-button::before,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-67fd5fb a[href^="tel:"].elementor-button::before,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-2a3f537 a[href^="tel:"].elementor-button::before {
+        content: '\260E'; font-size: 15px; line-height: 1;
+      }
+
+      /* Shop Orthopedics Mobile ROI boxes */
+      .cs-shop-orthopedics .cs-content .elementor-element-e955794,
+      .cs-shop-orthopedics .cs-content .elementor-element-eab573a {
+        display: flex; align-items: center; justify-content: center; gap: 16px;
+        box-sizing: border-box; width: 100%;
+        background: #1456c7; border-radius: 16px; padding: 20px 24px; margin: 0 0 16px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+      }
+      .cs-shop-orthopedics .cs-content .elementor-element-e955794 > .elementor-element,
+      .cs-shop-orthopedics .cs-content .elementor-element-eab573a > .elementor-element {
+        flex: 0 0 auto; width: auto; min-width: 0;
+      }
+      .cs-shop-orthopedics .cs-content .elementor-element-e955794 p,
+      .cs-shop-orthopedics .cs-content .elementor-element-eab573a p {
+        color: #fff; font-size: 26px; font-weight: 800; margin: 0; line-height: 1.1;
+      }
+      .cs-shop-orthopedics .cs-content .elementor-element-e955794 img,
+      .cs-shop-orthopedics .cs-content .elementor-element-eab573a img {
+        width: 36px; height: auto; margin: 0; border-radius: 0; flex: 0 0 auto;
+      }
+
+      /* Mobile Benefit Grids (1-col) */
+      .cs-willo .cs-content .elementor-element-55000c0,
+      .cs-shop-orthopedics .cs-content .elementor-element-4007a1b,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-4007a1b {
+        display: grid; grid-template-columns: 1fr; column-gap: 0;
+      }
+      .cs-willo .cs-content .elementor-element-55000c0 > .elementor-element,
+      .cs-shop-orthopedics .cs-content .elementor-element-4007a1b > .elementor-element,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-4007a1b > .elementor-element {
+        padding-bottom: 20px;
+      }
+      .cs-willo .cs-content .elementor-element-55000c0 .elementor-divider,
+      .cs-shop-orthopedics .cs-content .elementor-element-4007a1b .elementor-divider,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-4007a1b .elementor-divider { margin: 0 0 14px; }
+      .cs-willo .cs-content .elementor-element-55000c0 .elementor-icon-box-wrapper,
+      .cs-shop-orthopedics .cs-content .elementor-element-4007a1b .elementor-icon-box-wrapper,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-4007a1b .elementor-icon-box-wrapper { display: flex; align-items: flex-start; gap: 12px; }
+      .cs-willo .cs-content .elementor-element-55000c0 .elementor-icon-box-icon,
+      .cs-shop-orthopedics .cs-content .elementor-element-4007a1b .elementor-icon-box-icon,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-4007a1b .elementor-icon-box-icon { flex: 0 0 auto; display: block; margin: 0; }
+      .cs-willo .cs-content .elementor-element-55000c0 .elementor-icon-box-icon::before,
+      .cs-shop-orthopedics .cs-content .elementor-element-4007a1b .elementor-icon-box-icon::before,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-4007a1b .elementor-icon-box-icon::before {
+        content: '\2713'; display: flex; align-items: center; justify-content: center;
+        width: 24px; height: 24px; border-radius: 50%; border: 2px solid #005cb9;
+        color: #005cb9; font-size: 13px; font-weight: 700; line-height: 1;
+      }
+      .cs-willo .cs-content .elementor-element-55000c0 .elementor-icon-box-content,
+      .cs-shop-orthopedics .cs-content .elementor-element-4007a1b .elementor-icon-box-content,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-4007a1b .elementor-icon-box-content { flex: 1; min-width: 0; }
+      .cs-willo .cs-content .elementor-element-55000c0 .elementor-icon-box-title,
+      .cs-shop-orthopedics .cs-content .elementor-element-4007a1b .elementor-icon-box-title,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-4007a1b .elementor-icon-box-title { font-size: 18px; font-weight: 700; color: #0a0000; margin: 0 0 4px; line-height: 1.3; }
+      .cs-willo .cs-content .elementor-element-55000c0 .elementor-icon-box-description,
+      .cs-shop-orthopedics .cs-content .elementor-element-4007a1b .elementor-icon-box-description,
+      .cs-farmers-daughter-fibers .cs-content .elementor-element-4007a1b .elementor-icon-box-description { font-size: 15px; color: #555; margin: 0; line-height: 1.6; }
+    }
+
     @keyframes willo-pairing-dash {
       from { background-position: 0 0; }
       to   { background-position: 30px 0; }
@@ -694,6 +788,13 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-r
     .cs-farmers-daughter-fibers .cs-content .eael-circle-item:nth-child(4) .eael-circle-btn { left: 50%;   top: 92%; }
     .cs-farmers-daughter-fibers .cs-content .eael-circle-item:nth-child(5) .eael-circle-btn { left: 14%;   top: 71%; }
     .cs-farmers-daughter-fibers .cs-content .eael-circle-item:nth-child(6) .eael-circle-btn { left: 14%;   top: 29%; }
+    /* Phones: shrink the ring circles + centre text so the widget isn't cramped. */
+    @media (max-width: 600px) {
+      .cs-farmers-daughter-fibers .cs-content .eael-circle-inner { max-width: 320px; }
+      .cs-farmers-daughter-fibers .cs-content .eael-circle-btn { width: 72px; height: 72px; font-size: 10px; gap: 1px; padding: 4px; }
+      .cs-farmers-daughter-fibers .cs-content .eael-circle-btn svg { width: 22px; height: 22px; }
+      .cs-farmers-daughter-fibers .cs-content .eael-circle-btn-content { font-size: 17px; width: 52%; }
+    }
 
     .cs-content { font-size: 17px; line-height: 1.7; color: #333; word-break: break-word; }
     .cs-content h2 {
